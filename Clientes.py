@@ -58,3 +58,31 @@ class Clientespila:
         if self.items:
             return self.items.pop()
         return None
+    
+    def mostrar_primero(self):
+        print(" esta es la pila de clientes recientes:")
+        for cliente in reversed(self.items[-3:]): # de los ultimos 3 clientes recientes
+            print(f"{cliente.nombre}")
+        
+
+#seccion de la cola
+
+class  Clientescola:
+    def __init__(self):
+        self.items = []
+
+    
+    def encolar_cliente(self, cliente):
+        self.items().append(cliente)
+
+    
+    def desencolar_cliente(self,cliente):
+        if self.items:
+            return self.items.popleft()
+        return None
+    
+    def mostar(self):
+        print(" Esta es la cola de los clientes en espera:")
+        for cliente in self.items:
+            print(f"{cliente.nombre}")
+            
