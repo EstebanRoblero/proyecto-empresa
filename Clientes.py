@@ -85,4 +85,23 @@ class  Clientescola:
         print(" Esta es la cola de los clientes en espera:")
         for cliente in self.items:
             print(f"{cliente.nombre}")
-            
+
+lista_enlazada=Enlazadalista_declientes()
+pila_clientes= Clientespila()
+cola_clientes=Clientescola()
+
+#funvion principal 
+
+def registro_declientes():
+    print("resgistar al cliente")
+
+    nombre=input("Escriba su nombre: ")
+    email=input(" Escriba su Email: ")
+    telefono=input("Coloque su numero de telefono: ")
+    edad= input("Coloque su edad")
+
+
+
+    cliente_nuevo=clientes(nombre, email,telefono,edad)
+
+
