@@ -1,0 +1,52 @@
+Requerimientos del programa de peluqueria y salon de belleza
+
+REQUERIMIENTOS FUNCIONALES:
+
+1. El programa debe gestionar a los clientes
+ - debe permitir registrar a los clientes que lleguen 
+ - el sistema debe permitir editar o eliminar los datos de un cliente
+ - el programa debe mostrar un historial de servicios que ofrece la empresa
+
+2. El programa debe gestionar los servicios
+ - el sistema deber permitir agregar, editar o incluso eliminar servicios
+   como: el corte de pelo, tinte o depilacion
+ - ademas el programa debe mostar los precios de cada servicio 
+
+3. El programa debe gestionar la citas
+ - el sistema debera permitir agendar cada una de las citas indicando al cliente, servicio,
+   fecha y hora
+ - el sistema debera evitar conflictos de horarios cruzados con otros clientes 
+ - el sistema debera permitir cancelar o poder reprogramar las citas 
+ - Este sistema debera avisar si la cita de un cliente ya esta disponible en el mismo dia o hora.
+
+4. Pago o facturazion 
+ - el sistema debera permitir registar cada uno de los pagos realizados por lo clientes
+ - el sistema debera generar facturas o comprobantes por los servicios 
+
+5. inventarios de productos
+ - el programa debera permitir registrar productos ya utilizados o vendidos
+ - el sistema debera controlar el stock y avisar si el producto esta agotado 
+ - el sistema debera registrar las compras de productos nuevos.
+
+6. reportes 
+ - el programa debera genera resportes de las citas, ventas y clientes frecuentes
+
+REQUERIMIENTOS NO FUNCIONALES:
+
+1. Rendimiento 
+ - el sistema debera responder al usario en pocos segundos al realizar 
+   operaciones muy comunes
+ - el sistema debera poder funcionar con al menos 90 clientes 
+
+2. usabilidad del programa 
+ - el sistema debera contar con una interfaz grafica entendible y facil de usar 
+ - debe tener los menus bien organizados y algunos mensajes de avisos
+
+3. Mantenibilidad 
+ - el programa debera estar bien documentado y ademas seguir con las estrcuturas claras de las funciones 
+ - debera ser facil agregar las funciones sin perjudicar el programa completo 
+
+4. estetica e interfaz
+ - el sistema debera tener una interfaz llamativa 
+ - el texto de las ventas o interfaz deben ser claros y legibles 
+ - deben incluir el nombre de la empresa
