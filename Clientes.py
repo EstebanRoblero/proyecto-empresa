@@ -116,6 +116,16 @@ class cliente:
                 else:
                     derecha = medio - 1
             return None
+        
+        def has(self,nombre):
+            tabla={}
+            actual=self.cabeza
+            while actual:
+                tabla[hash(actual.nombre.lower())]= actual
+                actual=actual.siguiente
+            clave=hash(nombre.lower())
+            return tabla.get(clave,None)
+
                 
 
        
