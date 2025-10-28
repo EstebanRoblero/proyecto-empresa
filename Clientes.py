@@ -2,22 +2,23 @@
 
 class cliente:
     #dento de la clase cliente es un nodo ya que contiene los datos  
-    def __init__(self, nombre, telefono, edad):
+    def __init__(self, nombre, telefono, edad, genero):
         self.nombre=nombre
         self.telefono=telefono
         self.edad=edad
+        self.genero=genero
         self.siguiente=None #aqui se establce el fin de la de lista si no hay nada 
 
     
-    class Listadeclienetes:
+    class Listadeclieentes:
         def __init__(self):
             # donde la lista se va enlazar 
             self.cabeza=None
             # cabeza de la lista enlazada
 
-        def agregarcliente(self,nombre,telefono,edad):
-            nuevo=cliente(nombre,telefono,edad)
-            if self.cabeza is None:# si la lista llegue a estar vacia el nodo empieza hacer la nueva cabeza 
+        def agregarcliente(self,nombre,telefono,edad,genero):
+            nuevo=cliente(nombre,telefono,edad,genero)
+            if self.cabeza is None:# si la lista llega a estar vacia el nodo empieza hacer la nueva cabeza 
                 self.cabeza=nuevo 
             else:
                 actual=self.cabeza
@@ -33,7 +34,7 @@ class cliente:
             actual=self.cabeza
             print("\n--Lista de clientes--")
             while actual:
-                print(f"{actual.nombre} == Telefono:{actual.telefono} == Edad: {actual.edad}")
+                print(f"{actual.nombre} == Telefono:{actual.telefono} == Edad: {actual.edad} == Genero {actual.genero}")
                 actual=actual.siguiente
         
         def buscarcliente(self,nombre):
@@ -73,7 +74,50 @@ class cliente:
             ordenados =quicksort(self.obtenerlista())
             self.cabeza=None
             for a in ordenados:
-                self.agregarcliente(a.nombre, )
+                self.agregarcliente(a.nombre, a.telefono, a.edad, a.genero )
+        
+        def shell(self):
+            lista= self.obtenerlista()
+            n = len(lista)
+            salto=n //2
+            while salto >0:
+                for i in range(salto, n):
+                    temp=lista[i]
+                    j = i 
+                    while j >= salto and lista [j - salto].nombre > temp.nombre:
+                        lista[j]= lista[j - salto]
+                        j -= salto
+                    lista[j]= temp
+                    salto //=2
+                self.cabeza= None
+
+                for z in lista:
+                    self.agregarcliente(z.nombre, z.telefono, z.edad, z.genero )
+        
+
+        def secuencial_busqueda(self,nombre):
+            actual=self.cabeza
+            while actual:
+                if actual.nombre.lower() == nombre.lower():
+                    return actual
+                actual= actual.siguiente
+            return None
+        
+
+        def binaria_unabusqueda(self,nombre):
+            lista=sorted(self.obtenerlista(), key=lambda x: x.nombre)
+            izquierda, derecha=0, len (lista)-1
+            while izquierda <= derecha:
+                medio = (izquierda + derecha) // 2
+                if lista[medio].nombre.lower() == nombre.lower():
+                    return lista[medio]
+                elif lista[medio].nombre.lower() < nombre.lower():
+                    izquierda = medio + 1
+                else:
+                    derecha = medio - 1
+            return None
+                
+
        
 
             
