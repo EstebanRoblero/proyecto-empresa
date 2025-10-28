@@ -36,7 +36,53 @@ class Inventariolista:
             estado= "Hay Disponible" if actual.cantidad > 0 else "Esta Agotado"
             print(f"{actual.nombre} == Cantidad: {actual.cantidad} == Precio Q{actual.precio} == Estado {actual.estado}")
             actual= actual.siguiente
-            
+        
+    
+    def registode_entradas(self,cantidad,nombre):
+        self.cola.append(nombre,cantidad)
+        actual=actual.siguiente
+        while actual:
+            if actual.nombre==nombre:
+                actual.cantidad += cantidad
+                print(f"Entrada de producto registrado: {cantidad}  == unidades de: {nombre}")
+                return
+            actual=actual.siguiente
+        print("El producto no se ha encontrado intente de nuevo.")
+    
+
+    def registrode_salidas(self,cantidad,nombre):
+        self.cola.append(nombre,cantidad)
+        actual=actual.siguiente
+        while actual:
+            if actual.nombre==nombre:
+                if actual.cantidad >= cantidad:
+                    actual.cantidad-= cantidad
+                    print(f"Ha salido el producto registrado: {cantidad} == unidade de: {nombre}")
+                
+                else:
+                    print("No hay suficiente producto en el stock.")
+                
+                return
+            actual=actual.siguiente
+        print("El prodcuto no se ha encontrado intente de nuevo.")
+    
+
+    def secuencial_buscar(self,nombre):
+        actual=actual.cabeza
+        while actual:
+            if actual.nombre==nombre:
+                print(f"Se ha encontrado el producto: {nombre} con la cantidad de: {actual.cantidad} con el precio de: Q{actual.precio}")
+                return actual
+            actual=actual.siguiente
+        print("El producto no se ha encontrado intente de nuevo.")
+        return None
+
+
+                 
+                
+
+
+
         
     
 
