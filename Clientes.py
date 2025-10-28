@@ -35,6 +35,46 @@ class cliente:
             while actual:
                 print(f"{actual.nombre} == Telefono:{actual.telefono} == Edad: {actual.edad}")
                 actual=actual.siguiente
+        
+        def buscarcliente(self,nombre):
+            actual=self.cabeza 
+            while actual:
+                if actual.nombre.lower() == nombre.lower():
+                    return actual
+                actual=actual.siguiente
+            return None 
+        
+        def bucleordenado(self):
+            if not self.cabeza:
+                return
+            cambiado=True
+            while cambiado:
+                cambiado=False
+                actual=self.cabeza
+                while actual.siguiente:
+                    if actual.nombre > actual.siguiente.nombre:
+                        actual.nombre, actual.siguiente.nombre = actual.siguiente.nombre, actual.nombre
+                        actual.telefono, actual.siguiente.telefono = actual.siguiente.telefono, actual.telefono
+                        actual.edad, actual.siguiente.edad = actual.siguiente.edad, actual.edad
+                        actual.genero, actual.siguiente.genero = actual.siguiente.genero, actual.genero
+                        cambiado=True
+                    actual=actual.siguiente
+        
+        def quicksort_ordenar(self):
+            def quicksort(lista):
+                if len(lista) <=1:
+                    return lista
+                soporte=lista[len (lista)//2]
+                izquierda=[x for x in lista if x.nombre < soporte.nombre]
+                centro=[x for x in lista if x.nombre== soporte.nombre]
+                derecha=[x for x in lista if x.nombre > soporte.nombre]
+                return quicksort(izquierda)+centro+quicksort(derecha)
+            
+            ordenados =quicksort(self.obtenerlista())
+            self.cabeza=None
+            for a in ordenados:
+                self.agregarcliente(a.nombre, )
+       
 
             
         
