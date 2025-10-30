@@ -77,6 +77,22 @@ class Inventariolista:
         print("El producto no se ha encontrado intente de nuevo.")
         return None
 
+    def arreglo_lista(self):
+        arreglo=[]
+        actual=self.cabeza
+        while actual:
+            arreglo.append((actual.nombre, actual.cantidad, actual.precio))
+            actual=actual.siguiente
+        return arreglo
+    
+    def busqueda_binaria(self,lista,nombre):
+        izquierda, derecha=0, len(lista) -1
+        while izquierda <= derecha:
+            medio= (izquierda + derecha)//2
+            if lista[medio][0]==nombre:
+                print(f"producto encontrado: {lista[medio]} ")
+
+    
 
                  
                 
