@@ -85,14 +85,28 @@ class Inventariolista:
             actual=actual.siguiente
         return arreglo
     
-    def busqueda_binaria(self,lista,nombre):
-        izquierda, derecha=0, len(lista) -1
-        while izquierda <= derecha:
-            medio= (izquierda + derecha)//2
-            if lista[medio][0]==nombre:
-                print(f"producto encontrado: {lista[medio]} ")
+    def hashing(self,nombre):
+        clave=sum(ord(c) for c in nombre) % 10
+        print(f"hash de {nombre}: {clave}")
+        return clave
+
+
+    def bubble_sort(self, lista):
+        n=len(lista)
+        for i in range(n):
+            for j in range(0, n-i-1):
+                if lista[j][0] > lista[j+1][0]:
+                    lista[j], lista[j+1] = lista[j + 1], lista[j]
+        print("la lista esta ordenada:")
+        return lista
+    
+    
 
     
+
+
+
+
 
                  
                 
