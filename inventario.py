@@ -100,7 +100,27 @@ class Inventariolista:
         print("la lista esta ordenada:")
         return lista
     
+
+    def quick_sort(self, lista):
+        if len(lista)<=1:
+            return lista
+        pivote= lista[0]
+        menores= [x for x in lista[1:] if x[0] <=pivote [0]]
+        mayores= [x for x in lista[1:] if x[0] > pivote [0]]
+        return self.quick_sort (menores) + [pivote] + self.quick_sort(mayores)
     
+    
+
+    def movimiento_inventario(self): #pila
+        print("=====Entradas de productos======")
+        for movi in reversed(self.stack):
+            print(movi)
+
+        print("====Salidas de productos=====")#con cola
+        for mov in self.cola:
+            print(movi)
+
+
 
     
 
