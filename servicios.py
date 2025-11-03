@@ -1,29 +1,37 @@
-class servicio:
-    def __init__(self,nombre,precio):
-        self.nombre=nombre
-        self.precio=precio
+Precios={
+    "Corte de hombre": 30,
+    "Corte + Lavado hombre": 40,
+    "Barba": 20,
+    "Depilacion de cejas hombre": 10,
+    "Corte de mujer": 35,
+    "Corte + Lavado mujer": 40,
+    "Depilacion de cejas mujer": 10
+
+}
+
+Tintes={
+    "Completo":(100,200),
+    "mechas":(180,170),
+    "puntas":(80,90),
+    "fantasia":(70,80),
+    "tono sobre tono":(76,86)
+
+}
 
 
-class listadeservicios:
-    def __init__(self):
-        self.servicios= [
-            servicio("Corte de cabello", 30),
-            servicio("Tinte de cabello largo", 500),
-            servicio("Tinte de cabello coro, 300"),
-            servicio("Tinte de cabello (colores vivos), 500"),
-            servicio("Lavado y secado", 40),
-            servicio("Pedicure", 20),
-            servicio("Base cabello corto y largo",150)
-        ]
+Bases={
+    "lacio":(100,250),
+    "ondulado":(200,270),
+    "rizado":(220,300),
+    "afro":(270,320)
+}
 
-    #USAMOS BUBBLE SORT
-    def mostrarservicio(self):
-        e=len(self.servicios)
-        for i in range(e):
-            for j in range (0, e - i -1):
-                if self.servicios[j].precio>self.servicios[j + 1].precio:
-                    self.servicios[j], self.servicios[j + 1] =self.servicios[j + 1],self.servicios[j]
-        print("Servicios ordenados por precio")
+Servicios_de_hombre=[
+    ("corte hombre", Precios["Corte de hombre"]),
+    ("Corte + Lavado de hombre", Precios["Corte + Lavado hombre"]),
+    ("Barba", Precios["Barba"]),
+    ("Depilacion de cejas", Precios["Depilacion de cejas hombre"])
 
+]
 
-    
+Servicios_de_mujer=
