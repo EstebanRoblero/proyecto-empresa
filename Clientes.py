@@ -18,26 +18,30 @@ class cliente:
 
         def agregarcliente(self,nombre,telefono,edad,genero):
             nuevo=cliente(nombre,telefono,edad,genero)
-            if self.cabeza is None:# si la lista llega a estar vacia el nodo empieza hacer la nueva cabeza 
+            if not self.cabeza:
                 self.cabeza=nuevo 
             else:
                 actual=self.cabeza
                 while actual.siguiente:
-                    actual=actual.siguiente #aqui esta recorriendo hasta llegar al final de la cabeza
-                actual.siguiente=nuevo #luego lo conecta con el nodo nuevo al final del puntero 
-            print(f"Cliente agragado {cliente} ")
-        
-        def mostarclientes(self): 
-            if self.cabeza is None:
+                    actual=actual.siguiente
+                actual.siguiente=nuevo
+            return nuevo
+           
+        def mostar_clientes(self):
+            actual=self.cabeza 
+            if not actual:
                 print("No hay clientes registrados.") #aqui itera al usar punteros en el nodo 
                 return 
-            actual=self.cabeza
+            
+            idz=1
             print("\n--Lista de clientes--")
             while actual:
-                print(f"{actual.nombre} == Telefono:{actual.telefono} == Edad: {actual.edad} == Genero {actual.genero}")
+                print(f"{idz}. {actual.nombre} == Telefono:{actual.telefono} == Edad: {actual.edad} == Genero {actual.genero}")
                 actual=actual.siguiente
+                idz+=1
+
         
-        def buscarcliente(self,nombre):
+        def busqueda_secuencial(self,nombre):
             actual=self.cabeza 
             while actual:
                 if actual.nombre.lower() == nombre.lower():
@@ -45,92 +49,66 @@ class cliente:
                 actual=actual.siguiente
             return None 
         
-        def bucleordenado(self):
-            if not self.cabeza:
-                return
-            cambiado=True
-            while cambiado:
-                cambiado=False
-                actual=self.cabeza
-                while actual.siguiente:
-                    if actual.nombre > actual.siguiente.nombre:
-                        actual.nombre, actual.siguiente.nombre = actual.siguiente.nombre, actual.nombre
-                        actual.telefono, actual.siguiente.telefono = actual.siguiente.telefono, actual.telefono
-                        actual.edad, actual.siguiente.edad = actual.siguiente.edad, actual.edad
-                        actual.genero, actual.siguiente.genero = actual.siguiente.genero, actual.genero
-                        cambiado=True
-                    actual=actual.siguiente
-        
-        def quicksort_ordenar(self):
-            def quicksort(lista):
-                if len(lista) <=1:
-                    return lista
-                soporte=lista[len (lista)//2]
-                izquierda=[x for x in lista if x.nombre < soporte.nombre]
-                centro=[x for x in lista if x.nombre== soporte.nombre]
-                derecha=[x for x in lista if x.nombre > soporte.nombre]
-                return quicksort(izquierda)+centro+quicksort(derecha)
-            
-            ordenados =quicksort(self.obtenerlista())
-            self.cabeza=None
-            for a in ordenados:
-                self.agregarcliente(a.nombre, a.telefono, a.edad, a.genero )
-        
-        def shell(self):
-            lista= self.obtenerlista()
-            n = len(lista)
-            salto=n //2
-            while salto >0:
-                for i in range(salto, n):
-                    temp=lista[i]
-                    j = i 
-                    while j >= salto and lista [j - salto].nombre > temp.nombre:
-                        lista[j]= lista[j - salto]
-                        j -= salto
-                    lista[j]= temp
-                    salto //=2
-                self.cabeza= None
-
-                for z in lista:
-                    self.agregarcliente(z.nombre, z.telefono, z.edad, z.genero )
-        
-
-        def secuencial_busqueda(self,nombre):
+        def lista_obtener(self):
+            arreglo=[]
             actual=self.cabeza
             while actual:
-                if actual.nombre.lower() == nombre.lower():
-                    return actual
-                actual= actual.siguiente
-            return None
-        
-
-        def binaria_unabusqueda(self,nombre):
-            lista=sorted(self.obtenerlista(), key=lambda x: x.nombre)
-            izquierda, derecha=0, len (lista)-1
-            while izquierda <= derecha:
-                medio = (izquierda + derecha) // 2
-                if lista[medio].nombre.lower() == nombre.lower():
-                    return lista[medio]
-                elif lista[medio].nombre.lower() < nombre.lower():
-                    izquierda = medio + 1
-                else:
-                    derecha = medio - 1
-            return None
-        
-        def has(self,nombre):
-            tabla={}
-            actual=self.cabeza
-            while actual:
-                tabla[hash(actual.nombre.lower())]= actual
+                arreglo.append(actual)
                 actual=actual.siguiente
-            clave=hash(nombre.lower())
-            return tabla.get(clave,None)
+            return arreglo       
+        
+        def lista_reconstruida(self, arreglo):
+            if not arreglo:
+                self.cabeza=None
+                return
+            self.cabeza=arreglo[0]
+            actual=self.cabeza
+            actual.siguiente=None
+            for nodo in arreglo[1:]:
+                actual.siguiente=nodo
+                actual=actual.siguiente
+                actual.siguiente=None
 
-                
+        def selection_sort(self):
+            arreglo= self.lista_obtener
+            n=len(arreglo)
+            for i in range(n):
+                min_idz=i
+                for j in range( i +1, n):
+                    if arreglo[j].nombre.lower() < arreglo[min_idz].nombre.lower():
+                        min_idz=j
+                if min_idz != i:
+                    arreglo[i], arreglo[min_idz]= arreglo[min_idz], arreglo[i]
+            self.lista_reconstruida(arreglo)
+            print("Lista de los clientess ordenada por nombre. ")        
 
-       
-
-            
+        
+        def eliminar_cliente(self, nombre):
+            actual=self.cabeza
+            previo=None
+            while actual:
+                if actual.nombre.lower()==nombre.lower():
+                    if previo:
+                        previo.sitguiente=actual.siguiente
+                    else:
+                        self.cabeza= actual.siguiente
+                    return True
+                previo=actual
+                actual=actual.siguiente
+            return False
+        
+        def lista_clientes(self):
+            salida=[]
+            actual=self.cabeza
+            while actual:
+                salida.append({
+                    "nombre": actual.nombre,
+                    "telefono": actual.telefono,
+                    "edad": actual.edad,
+                    "genero": actual.genero
+               })
+                actual=actual.siguiente
+            return salida
         
 
 
