@@ -1,124 +1,104 @@
-class Nododelproducto:
-    def __init__(self,nombre, cantidad,precio):
+class NodoProducto:
+    def __init__(self,nombre,cantidad,precio):
         self.nombre=nombre
         self.cantidad=cantidad
         self.precio=precio
         self.siguiente=None
 
-
-class Inventariolista:
+class Inventario_lista:
     def __init__(self):
         self.cabeza=None
         self.stack=[]
         self.cola=[]
 
-    
-
-    def agregar_producto(self,nombre,cantidad, precio ):
-        nuevo=Nododelproducto(nombre,cantidad,precio)
+    def agregar_producto(self,nombre,cantidad,precio):
+        nuevo=NodoProducto(nombre,cantidad,precio)
         if self.cabeza is None:
             self.cabeza=nuevo
-
         else:
             actual=self.cabeza
             while actual.siguiente:
                 actual=actual.siguiente
             actual.siguiente=nuevo
-        print(f"El producto {nombre} ha sido agregado exitosamente.")
+        print(f"El producto: {nombre}  ha sido agregado con éxito.")
 
-    
-    def mostrar_elinventario(self):
+    def mostrar_inventario(self):
         if self.cabeza is None:
-            print("El inventario esta vacio.")
+            print("El inventario esta vacío.")
             return
         actual=self.cabeza
+        print("\n === Inventario === ")
         while actual:
-            estado= "Hay Disponible" if actual.cantidad > 0 else "Esta Agotado"
-            print(f"{actual.nombre} == Cantidad: {actual.cantidad} == Precio Q{actual.precio} == Estado {actual.estado}")
-            actual= actual.siguiente
-        
-    
-    def registode_entradas(self,cantidad,nombre):
-        self.cola.append(nombre,cantidad)
-        actual=actual.siguiente
-        while actual:
-            if actual.nombre==nombre:
-                actual.cantidad += cantidad
-                print(f"Entrada de producto registrado: {cantidad}  == unidades de: {nombre}")
-                return
+            estado="Disponible" if actual.cantidad>0 else "Agotado"
+            print(f"{actual.nombre} === Cantidad: {actual.cantidad} === Precio Q{actual.precio} === Estado: {estado}")
             actual=actual.siguiente
-        print("El producto no se ha encontrado intente de nuevo.")
-    
 
-    def registrode_salidas(self,cantidad,nombre):
-        self.cola.append(nombre,cantidad)
-        actual=actual.siguiente
+    def salidas(self,nombre,cantidad):
+        actual=self.cabeza
         while actual:
             if actual.nombre==nombre:
-                if actual.cantidad >= cantidad:
-                    actual.cantidad-= cantidad
-                    print(f"Ha salido el producto registrado: {cantidad} == unidade de: {nombre}")
-                
+                if actual.cantidad>=cantidad:
+                    actual.cantidad-=cantidad
+                    self.cola.append((nombre,cantidad))
+                    print(f"La salida registrada es: {cantidad} unidades de: {nombre}")
+                    return True
                 else:
-                    print("No hay suficiente producto en el stock.")
-                
-                return
+                    print("El stock  es insuficiente")
+                    return False
             actual=actual.siguiente
-        print("El prodcuto no se ha encontrado intente de nuevo.")
-    
+        print("El producto no ha sido encontrado")
+        return False
 
-    def secuencial_buscar(self,nombre):
-        actual=actual.cabeza
+    def entradas(self,nombre,cantidad):
+        actual=self.cabeza
         while actual:
             if actual.nombre==nombre:
-                print(f"Se ha encontrado el producto: {nombre} con la cantidad de: {actual.cantidad} con el precio de: Q{actual.precio}")
+                actual.cantidad+=cantidad
+                self.stack.append((nombre,cantidad))
+                print(f"la entrada registrada de : {cantidad} unidades de {nombre}")
+                return True
+            actual=actual.siguiente
+        print("Producto no encontrado")
+        return False
+
+    def busqueda_secuencial(self,nombre):
+        actual=self.cabeza
+        while actual:
+            if actual.nombre.lower()==nombre.lower():
+                print(f"{nombre} encontrado === Cantidad: {actual.cantidad} === Precio Q{actual.precio}")
                 return actual
             actual=actual.siguiente
-        print("El producto no se ha encontrado intente de nuevo.")
+        print("Producto no encontrado")
         return None
 
-    def arreglo_lista(self):
+    def arreglo_de_lista(self):
         arreglo=[]
         actual=self.cabeza
         while actual:
-            arreglo.append((actual.nombre, actual.cantidad, actual.precio))
+            arreglo.append((actual.nombre,actual.cantidad,actual.precio))
             actual=actual.siguiente
         return arreglo
-    
-    def hashing(self,nombre):
-        clave=sum(ord(c) for c in nombre) % 10
-        print(f"hash de {nombre}: {clave}")
-        return clave
 
-
-    def bubble_sort(self, lista):
+    def bubble_sort(self):
+        lista=self.arreglo_lista()
         n=len(lista)
         for i in range(n):
-            for j in range(0, n-i-1):
-                if lista[j][0] > lista[j+1][0]:
-                    lista[j], lista[j+1] = lista[j + 1], lista[j]
-        print("la lista esta ordenada:")
+            for j in range(0,n-i-1):
+                if lista[j][0]>lista[j+1][0]:
+                    lista[j],lista[j+1]=lista[j+1],lista[j]
+        print("Inventario ordenado")
         return lista
-    
 
-    def quick_sort(self, lista):
-        if len(lista)<=1:
-            return lista
-        pivote= lista[0]
-        menores= [x for x in lista[1:] if x[0] <=pivote [0]]
-        mayores= [x for x in lista[1:] if x[0] > pivote [0]]
-        return self.quick_sort (menores) + [pivote] + self.quick_sort(mayores)
-    
-    
+    def hash_buscar(self,nombre):
+        tabla={}
+        actual=self.cabeza
+        while actual:
+            clave=sum(ord(c) for c in actual.nombre)%10
+            tabla[clave]=actual
+            actual=actual.siguiente
+        clave=sum(ord(c) for c in nombre)%10
+        return tabla.get(clave,None)
 
-    def movimiento_inventario(self): #pila
-        print("=====Entradas de productos======")
-        for movi in reversed(self.stack):
-            print(movi)
-
-        print("====Salidas de productos=====")#con cola
-        for mov in self.cola:
-            print(movi)
 
 
 
