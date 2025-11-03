@@ -1,3 +1,5 @@
+pila_historial=[]
+
 Precios={
     "Corte de hombre": 30,
     "Corte + Lavado hombre": 40,
@@ -34,4 +36,82 @@ Servicios_de_hombre=[
 
 ]
 
-Servicios_de_mujer=
+Servicios_de_mujer=[
+    ("Corte de mujer", Precios["Corte de mujer"]),
+    ("Corte + Lavado de mujer", Precios["Corte + Lavado mujer"]),
+    ("Depilacion cejas de mujer", Precios["Depilacion de cejas mujer"])
+]
+
+
+
+def servicios_mostrados_por_genero(genero):
+    lista= Servicios_de_hombre if genero == "H" else Servicios_de_mujer
+    print("n\== SERVICIOS DISPONIBLES==")
+    for i, (nombre, precio) in enumerate(lista,1):
+        print(f"{i}. {nombre} == Q{precio}")
+    print(f"{len(lista)+1}. Tinte")
+    print(f"{len(lista)+2}. Base del pelo capilar")
+
+
+def Seleccion_de_servicio_establecido(genero, opcion_index):
+    lista= Servicios_de_hombre if genero == "H" else Servicios_de_mujer
+    idz= opcion_index -1
+    if 0 <= idz < len(lista):
+        nombre, precio =lista[idz]
+        return nombre, float(precio)
+    return None, None
+
+
+def base_menu():
+    tipos = list(Bases.keys())
+    for i, t in enumerate(tipos, 1):
+        print(f"{i}. {t.capitalize()} (corto Q{Bases[t][0]} / largo Q{Bases[t][1]})")
+    eleccion= int(input("Eliga el tipo: "))
+    tipo=tipos[eleccion-1]
+    largo=input("¿Largo (L) o corto (C) el cabello? ").upper()
+    precio= Bases[tipo][1] if largo =="L" else Bases[tipo][0] 
+    desc = f"Base {tipo} - {'largo' if largo=='L' else 'corto'}"
+    return desc,precio
+
+def tinte_menu():
+    tipos=list(Tintes.keys())
+    for i, t in enumerate(tipos,1):
+        s,1=Tintes[t]
+        print(f"{i}. {t} corto Q{s} / largo Q{1}")
+    eleccion=int(input("Eliga el tipo: "))
+    tipo=tipos[eleccion-1]
+    largo= input("¿Largo (L) o corto (C)?: ").upper()
+    precio= Tintes[tipo][1] if largo== "L" else Tintes[tipo][0]
+    desc= f"Tinte: {tipo} ={'largo' if largo== 'L' else 'corto'}"
+    return desc,precio
+
+def atender_servicios_para_cliente(cliente, comprobante_agregar_func):
+    seleccionados=[]
+    while True:
+        servicios_mostrados_por_genero(cliente.genero)
+        opcion=input("Nro servicio (0 terminar): ").strip()
+        if opcion=="0":
+            break
+        if not opcion.isdigit(): continue
+        opcion=int(opcion)
+        lista_len=len(Servicios_de_hombre) if cliente.genero=="H" else len(Servicios_de_mujer)
+        if 1<=opcion<=lista_len:
+            nombres,precio=Seleccion_de_servicio_establecido(cliente.genero,opcion)
+            seleccionados.append((nombres,precio))
+            pila_historial.append((cliente.nombre,nombres,precio))
+            comprobante_agregar_func(nombres,precio)
+            print(f"Servicio agregado: {nombres} Q{precio}")
+        elif opcion==lista_len+1:
+            nombres,precio=tinte_menu()
+            seleccionados.append((nombres,precio))
+            pila_historial.append((cliente.nombre,nombres,precio))
+            comprobante_agregar_func(nombres,precio)
+        elif opcion==lista_len+2:
+            nombres,precio=base_menu()
+            seleccionados.append((nombres,precio))
+            pila_historial.append((cliente.nombre,nombres,precio))
+            comprobante_agregar_func(nombres,precio)
+        else:
+            print("Opción inválida")
+    return seleccionados
+
