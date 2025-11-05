@@ -74,16 +74,17 @@ def base_menu():
     return desc,precio
 
 def tinte_menu():
-    tipos=list(Tintes.keys())
-    for i, t in enumerate(tipos,1):
-        s,1=Tintes[t]
-        print(f"{i}. {t} corto Q{s} / largo Q{1}")
-    eleccion=int(input("Eliga el tipo: "))
-    tipo=tipos[eleccion-1]
-    largo= input("¿Largo (L) o corto (C)?: ").upper()
-    precio= Tintes[tipo][1] if largo== "L" else Tintes[tipo][0]
-    desc= f"Tinte: {tipo} ={'largo' if largo== 'L' else 'corto'}"
-    return desc,precio
+    tipos = list(Tintes.keys())
+    for i, t in enumerate(tipos, 1):
+        s, l = Tintes[t]  # corto, largo
+        print(f"{i}. {t} corto Q{s} / largo Q{l}")
+    eleccion = int(input("Elija el tipo: "))
+    tipo = tipos[eleccion - 1]
+    largo = input("¿Largo (L) o corto (C)?: ").upper()
+    precio = Tintes[tipo][1] if largo == "L" else Tintes[tipo][0]
+    desc = f"Tinte: {tipo} - {'largo' if largo == 'L' else 'corto'}"
+    return desc, precio
+
 
 def atender_servicios_para_cliente(cliente, comprobante_agregar_func):
     seleccionados=[]
