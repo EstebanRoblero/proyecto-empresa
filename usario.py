@@ -1,16 +1,26 @@
-class Usuario:
-    def __init__(self,nombre,rol):
-        self.nombre=nombre
-        self.rol=rol  # 'jefe' o 'trabajador'
+# usario.py
 
 class Lista_de_usuarios:
     def __init__(self):
-        self.usuarios=[]
+        # Usuarios por defecto
+        self.usuarios = {
+            "jefe": {"password": "1234", "rol": "jefe"},
+            "trabajador": {"password": "0000", "rol": "trabajador"},
+        }
 
-    def agregar_usuario(self,nombre,rol):
-        self.usuarios.append(Usuario(nombre,rol))
+    def autenticar(self, username, password):
+        """Verifica usuario y contraseña y devuelve el rol si es correcto."""
+        username = username.strip().lower()
+        if username in self.usuarios:
+            if self.usuarios[username]["password"] == password:
+                return self.usuarios[username]["rol"]
+        return None
 
-    def mostrar_usuarios(self):
-        print("\n== Usuarios del sistema ==")
-        for u in self.usuarios:
-            print(f"{u.nombre} | Rol: {u.rol}")
+    def agregar_usuario(self, username, password, rol):
+        """Agrega un nuevo usuario al sistema."""
+        username = username.strip().lower()
+        if username in self.usuarios:
+            return False
+        self.usuarios[username] = {"password": password, "rol": rol}
+        return True
+
