@@ -1,20 +1,18 @@
-# comprobante.py
-# Generación de comprobantes de pago (PDF o TXT) + registro de ventas en memoria
-# comprobante.py
-# comprobante.py
-# comprobante.py
-# Generación de comprobantes de pago en PDF + registro en memoria
+
 import os
 import time
-from fpdf import FPDF  # asegúrate de tener fpdf2 instalado
+from fpdf import FPDF
+from db_comprobantes import crear_tabla_comprobantes, insertar_comprobante
 
-# Lista RAM donde se guardan todas las ventas realizadas
+# Inicializar DB
+crear_tabla_comprobantes()
+
 ventas_ram = []
 
 class Comprobante:
     def __init__(self, cliente):
         self.cliente = cliente
-        self.items = []  # lista de tuples (descripcion, precio)
+        self.items = []
         self.fecha_emision = time.strftime("%Y-%m-%d %H:%M:%S")
 
     def agregar_item(self, descripcion, precio):
@@ -31,13 +29,9 @@ class Comprobante:
             "total": self.total()
         }
 
-    # -------------------------------
-    # Guardar como PDF
-    # -------------------------------
     def guardar_pdf(self, carpeta="comprobantes"):
         if not os.path.exists(carpeta):
             os.makedirs(carpeta)
-
         nombre_archivo = f"comprobante_{self.cliente.nombre.replace(' ', '_')}_{int(time.time())}.pdf"
         ruta = os.path.join(carpeta, nombre_archivo)
 
@@ -46,7 +40,6 @@ class Comprobante:
         pdf.set_font("Arial", "B", 16)
         pdf.cell(0, 10, " COMPROBANTE DE PAGO ", ln=True, align="C")
         pdf.ln(10)
-
         pdf.set_font("Arial", "", 12)
         pdf.cell(0, 8, f"Cliente: {self.cliente.nombre}", ln=True)
         pdf.cell(0, 8, f"Fecha de emisión: {self.fecha_emision}", ln=True)
@@ -60,12 +53,10 @@ class Comprobante:
         pdf.cell(0, 8, f"TOTAL:{'':<36} Q{self.total():>7.2f}", ln=True)
         pdf.output(ruta)
 
-        # Guardar en RAM
+        # Guardar en RAM y DB
         ventas_ram.append(self.to_dict())
+        insertar_comprobante(self)
         return ruta
 
-# -------------------------------
-# Función para crear comprobante
-# -------------------------------
-def generar_comprobante(cliente, servicios=None, inventario=None):
+def generar_comprobante(cliente):
     return Comprobante(cliente)

@@ -10,7 +10,7 @@ import reportes
 
 # ---------------------------------------------------
 # INSTANCIAS GLOBALES
-# ---------------------------------------------------
+
 lista_clientes = ListaClientes()
 inventario = Inventario_lista()
 lista_citas = ListaCitas()
@@ -18,7 +18,7 @@ usuarios = Lista_de_usuarios()  # admin/1234 por defecto
 
 # ---------------------------------------------------
 # LOGIN
-# ---------------------------------------------------
+
 def login_prompt():
     print("\n=== LOGIN ===")
     user = input("Usuario: ").strip()
@@ -32,7 +32,7 @@ def login_prompt():
 
 # ---------------------------------------------------
 # FLUJO CLIENTE
-# ---------------------------------------------------
+
 def flujo_cliente():
     while True:
         print("\n=== MENÚ CLIENTE ===")
@@ -65,7 +65,6 @@ def flujo_cliente():
                 print("⚠️ Por favor incluye AM o PM (ej. 11:00 am).")
                 continue
 
-            # ✅ Comprobar duplicado
             citas_mismo_dia = lista_citas.buscar_por_fecha(fecha)
             for c in citas_mismo_dia:
                 if c.hora.lower() == hora.lower():
@@ -145,18 +144,16 @@ def flujo_cliente():
 
 # ---------------------------------------------------
 # FLUJO TRABAJADOR
-# ---------------------------------------------------
-# ---------------------------------------------------
-# FLUJO TRABAJADOR
-# ---------------------------------------------------
+
 def flujo_trabajador(username):
     while True:
         print("\n=== MENÚ TRABAJADOR ===")
         print("1. Registrar cliente y cita")
         print("2. Registrar servicios prestados (y generar comprobante)")
         print("3. Registrar uso de producto (descontar inventario)")
-        print("4. Generar comprobante manual para cliente")
-        print("5. Cerrar sesión")
+        print("4. Agregar producto al inventario")
+        print("5. Generar comprobante manual para cliente")
+        print("6. Cerrar sesión")
         op = input("Opción: ").strip()
 
         if op == "1":
@@ -168,7 +165,7 @@ def flujo_trabajador(username):
             fecha = input("Fecha cita (DD-MM-YYYY): ").strip()
             hora = input("Hora (HH:MM AM/PM): ").strip().lower()
             lista_citas.agregar_cita(cliente.nombre, [], fecha, hora)
-            print(f"✅ Cita registrada para {cliente.nombre} - {fecha} {hora}")
+            print(f" Cita registrada para {cliente.nombre} - {fecha} {hora}")
 
         elif op == "2":
             nombre = input("Nombre del cliente (registrado): ").strip()
@@ -178,28 +175,36 @@ def flujo_trabajador(username):
                 continue
             comp = generar_comprobante(cliente, None, None)
             atender_servicios_para_cliente(cliente, comp.agregar_item)
-            fname = comp.guardar_pdf()  # genera PDF directamente
+            fname = comp.guardar_pdf()
             from comprobante import ventas_ram
             if ventas_ram:
                 ventas_ram[-1] = comp.to_dict()
-            print(f"✅ Comprobante PDF generado y guardado en {fname}")
+            print(f" Comprobante PDF generado y guardado en {fname}")
 
         elif op == "3":
             prod = input("Nombre del producto usado: ").strip()
             entrada = input("Cantidad usada (unidades/ml): ").strip()
+            tipo = input("Tipo (unidad/ml): ").strip().lower()
             try:
-                # Extrae solo los números (acepta decimales)
                 cantidad = float(''.join(c for c in entrada if c.isdigit() or c == '.'))
             except ValueError:
                 print("Cantidad inválida. Ingresa solo números.")
                 continue
-            ok = inventario.salidas(prod, cantidad)
+            ok = inventario.registrar_salida(prod, cantidad)
             if not ok:
-                print("⚠️ No se pudo registrar la salida (producto faltante o insuficiente).")
+                print(" No se pudo registrar la salida (producto faltante o insuficiente).")
             else:
-                print("✅ Salida registrada en inventario.")
+                print(" Salida registrada en inventario.")
 
         elif op == "4":
+            prod = input("Nombre del producto: ").strip()
+            cant = float(input("Cantidad: ").strip())
+            tipo = input("Tipo de producto (unidad/ml): ").strip().lower()
+            precio = float(input("Precio unitario Q: ").strip())
+            inventario.agregar_producto(prod, cant, precio, tipo)
+            print(" Producto agregado/actualizado en inventario.")
+
+        elif op == "5":
             nombre = input("Nombre del cliente: ").strip()
             cliente = lista_clientes.busqueda_secuencial(nombre)
             if not cliente:
@@ -216,21 +221,21 @@ def flujo_trabajador(username):
                     print("Precio inválido.")
                     continue
                 comp.agregar_item(desc, precio)
-            fname = comp.guardar_pdf()  # PDF directo
+            fname = comp.guardar_pdf()
             from comprobante import ventas_ram
             if ventas_ram:
                 ventas_ram[-1] = comp.to_dict()
-            print(f"✅ Comprobante PDF guardado en {fname}")
+            print(f" Comprobante PDF guardado en {fname}")
 
-        elif op == "5":
-            print("👋 Cerrando sesión trabajador.")
+        elif op == "6":
+            print(" Cerrando sesión trabajador.")
             break
         else:
             print("Opción inválida.")
 
 # ---------------------------------------------------
 # FLUJO JEFE
-# ---------------------------------------------------
+
 def flujo_jefe(username):
     while True:
         print("\n=== MENÚ JEFE ===")
@@ -247,17 +252,20 @@ def flujo_jefe(username):
         elif op == "2":
             prod = input("Producto: ").strip()
             cant = float(input("Cantidad: ").strip())
-            ok = inventario.registrar_entrada(prod, cant)
-            if not ok:
+            tipo = input("Tipo de producto (unidad/ml): ").strip().lower()
+            nodo = inventario.busqueda_secuencial(prod)
+            if nodo:
+                inventario.registrar_entrada(prod, cant)
+            else:
                 precio = float(input("Producto nuevo. Precio unitario Q: ").strip())
-                inventario.agregar_producto(prod, cant, precio)
-            print("✅ Inventario actualizado.")
+                inventario.agregar_producto(prod, cant, precio, tipo)
+            print(" Inventario actualizado.")
         elif op == "3":
             yyyy_mm = input("Mes a reportar (YYYY-MM): ").strip()
             fname, text = reportes.generar_reporte_mensual_txt(
                 yyyy_mm, inventario_obj=inventario, carpeta="reportes"
             )
-            print(f"📄 Reporte guardado en {fname}")
+            print(f" Reporte guardado en {fname}")
         elif op == "4":
             inventario.mostrar_movimientos()
         elif op == "5":
@@ -266,18 +274,18 @@ def flujo_jefe(username):
             rol = input("Rol (jefe/trabajador): ").strip().lower()
             ok = usuarios.agregar_usuario(user, pwd, rol)
             if ok:
-                print("✅ Usuario agregado.")
+                print(" Usuario agregado.")
             else:
-                print("⚠️ Usuario ya existe.")
+                print(" Usuario ya existe.")
         elif op == "6":
-            print("👋 Cerrando sesión jefe.")
+            print(" Cerrando sesión jefe.")
             break
         else:
             print("Opción inválida.")
 
 # ---------------------------------------------------
 # MENÚ PRINCIPAL
-# ---------------------------------------------------
+
 def main_menu():
     print("=== SISTEMA PELUQUERÍA ===")
     while True:
@@ -289,7 +297,7 @@ def main_menu():
 """)
         op = input("Elección: ").strip()
         if op == "0":
-            print("👋 Saliendo del sistema.")
+            print(" Saliendo del sistema.")
             sys.exit(0)
         elif op == "1":
             flujo_cliente()
@@ -300,7 +308,7 @@ def main_menu():
             if rol == "trabajador":
                 flujo_trabajador(username)
             else:
-                print("⚠️ Usuario sin permisos de trabajador.")
+                print(" Usuario sin permisos de trabajador.")
         elif op == "3":
             username = input("Usuario: ").strip()
             password = input("Contraseña: ").strip()
@@ -308,7 +316,7 @@ def main_menu():
             if rol == "jefe":
                 flujo_jefe(username)
             else:
-                print("⚠️ Usuario sin permisos de jefe.")
+                print(" Usuario sin permisos de jefe.")
         else:
             print("Opción inválida.")
 
@@ -317,4 +325,3 @@ def main_menu():
 # ---------------------------------------------------
 if __name__ == "__main__":
     main_menu()
-
