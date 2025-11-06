@@ -65,6 +65,7 @@ def flujo_cliente():
                 print("⚠️ Por favor incluye AM o PM (ej. 11:00 am).")
                 continue
 
+            # ✅ Comprobar duplicado
             citas_mismo_dia = lista_citas.buscar_por_fecha(fecha)
             for c in citas_mismo_dia:
                 if c.hora.lower() == hora.lower():
@@ -124,14 +125,6 @@ def flujo_cliente():
                     for s in servicios:
                         print(f"- {s[0]} Q{s[1]}")
                     print(f"Total a pagar: Q{total}")
-
-                    # Generar comprobante en PDF
-                    comp = generar_comprobante(cliente)
-                    for s in servicios:
-                        comp.agregar_item(s[0], s[1])
-                    ruta_pdf = comp.guardar_pdf()
-                    print(f"✅ Comprobante generado en PDF: {ruta_pdf}")
-
                 else:
                     print("⚠️ No se registró ninguna cita porque no se seleccionaron servicios.")
 
@@ -157,9 +150,9 @@ def flujo_trabajador(username):
     while True:
         print("\n=== MENÚ TRABAJADOR ===")
         print("1. Registrar cliente y cita")
-        print("2. Registrar servicios prestados (PDF)")
+        print("2. Registrar servicios prestados (y generar comprobante PDF)")
         print("3. Registrar uso de producto (descontar inventario)")
-        print("4. Generar comprobante manual (PDF)")
+        print("4. Generar comprobante manual para cliente (PDF)")
         print("5. Cerrar sesión")
         op = input("Opción: ").strip()
 
@@ -180,7 +173,7 @@ def flujo_trabajador(username):
             if not cliente:
                 print("Cliente no encontrado. Regístralo primero.")
                 continue
-            comp = generar_comprobante(cliente)
+            comp = generar_comprobante(cliente, None, None)
             atender_servicios_para_cliente(cliente, comp.agregar_item)
             ruta_pdf = comp.guardar_pdf()
             print(f"✅ Comprobante PDF generado en: {ruta_pdf}")
@@ -204,7 +197,7 @@ def flujo_trabajador(username):
             if not cliente:
                 print("Cliente no encontrado.")
                 continue
-            comp = generar_comprobante(cliente)
+            comp = generar_comprobante(cliente, None, None)
             while True:
                 desc = input("Descripción del servicio (enter para terminar): ").strip()
                 if desc == "":
@@ -216,7 +209,7 @@ def flujo_trabajador(username):
                     continue
                 comp.agregar_item(desc, precio)
             ruta_pdf = comp.guardar_pdf()
-            print(f"✅ Comprobante PDF guardado en: {ruta_pdf}")
+            print(f"✅ Comprobante PDF generado en: {ruta_pdf}")
 
         elif op == "5":
             print("👋 Cerrando sesión trabajador.")
@@ -313,3 +306,4 @@ def main_menu():
 # ---------------------------------------------------
 if __name__ == "__main__":
     main_menu()
+

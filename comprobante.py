@@ -2,17 +2,20 @@
 # Generación de comprobantes de pago (PDF o TXT) + registro de ventas en memoria
 # comprobante.py
 # comprobante.py
-from fpdf import FPDF
+# comprobante.py
+# Generación de comprobantes de pago en PDF + registro en memoria
 import os
 import time
+from fpdf import FPDF  # asegúrate de tener fpdf2 instalado
 
+# Lista RAM donde se guardan todas las ventas realizadas
 ventas_ram = []
 
 class Comprobante:
     def __init__(self, cliente):
         self.cliente = cliente
-        self.items = []  # (descripcion, precio)
-        self.fecha_emision = time.strftime("%d-%m-%Y %H:%M:%S")  # Formato amigable
+        self.items = []  # lista de tuples (descripcion, precio)
+        self.fecha_emision = time.strftime("%Y-%m-%d %H:%M:%S")
 
     def agregar_item(self, descripcion, precio):
         self.items.append((descripcion, float(precio)))
@@ -28,39 +31,41 @@ class Comprobante:
             "total": self.total()
         }
 
-    # --- PDF ---
+    # -------------------------------
+    # Guardar como PDF
+    # -------------------------------
     def guardar_pdf(self, carpeta="comprobantes"):
-        # Crear carpeta si no existe
         if not os.path.exists(carpeta):
             os.makedirs(carpeta)
 
-        filename_base = f"comprobante_{self.cliente.nombre.replace(' ', '_')}_{int(time.time())}.pdf"
-        file_path = os.path.join(carpeta, filename_base)
+        nombre_archivo = f"comprobante_{self.cliente.nombre.replace(' ', '_')}_{int(time.time())}.pdf"
+        ruta = os.path.join(carpeta, nombre_archivo)
 
         pdf = FPDF()
         pdf.add_page()
         pdf.set_font("Arial", "B", 16)
-        pdf.cell(0, 10, "💈 COMPROBANTE DE PAGO 💈", ln=True, align="C")
+        pdf.cell(0, 10, " COMPROBANTE DE PAGO ", ln=True, align="C")
         pdf.ln(10)
 
         pdf.set_font("Arial", "", 12)
-        pdf.cell(0, 10, f"Cliente: {self.cliente.nombre}", ln=True)
-        pdf.cell(0, 10, f"Fecha emisión: {self.fecha_emision}", ln=True)
+        pdf.cell(0, 8, f"Cliente: {self.cliente.nombre}", ln=True)
+        pdf.cell(0, 8, f"Fecha de emisión: {self.fecha_emision}", ln=True)
         pdf.ln(5)
-        pdf.cell(0, 0, "-"*60, ln=True)
-        pdf.ln(5)
+        pdf.cell(0, 8, "-"*50, ln=True)
 
         for desc, precio in self.items:
-            pdf.cell(140, 10, desc, border=0)
-            pdf.cell(0, 10, f"Q{precio:.2f}", ln=True, align="R")
+            pdf.cell(0, 8, f"{desc:<40} Q{precio:>7.2f}", ln=True)
 
-        pdf.ln(5)
-        pdf.cell(140, 10, "TOTAL", border=0)
-        pdf.cell(0, 10, f"Q{self.total():.2f}", ln=True, align="R")
+        pdf.cell(0, 8, "-"*50, ln=True)
+        pdf.cell(0, 8, f"TOTAL:{'':<36} Q{self.total():>7.2f}", ln=True)
+        pdf.output(ruta)
 
-        pdf.output(file_path)
-
-        # Guardar en memoria RAM
+        # Guardar en RAM
         ventas_ram.append(self.to_dict())
+        return ruta
 
-        return file_path
+# -------------------------------
+# Función para crear comprobante
+# -------------------------------
+def generar_comprobante(cliente, servicios=None, inventario=None):
+    return Comprobante(cliente)
