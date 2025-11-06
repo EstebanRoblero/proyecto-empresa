@@ -146,13 +146,16 @@ def flujo_cliente():
 # ---------------------------------------------------
 # FLUJO TRABAJADOR
 # ---------------------------------------------------
+# ---------------------------------------------------
+# FLUJO TRABAJADOR
+# ---------------------------------------------------
 def flujo_trabajador(username):
     while True:
         print("\n=== MENÚ TRABAJADOR ===")
         print("1. Registrar cliente y cita")
-        print("2. Registrar servicios prestados (y generar comprobante PDF)")
+        print("2. Registrar servicios prestados (y generar comprobante)")
         print("3. Registrar uso de producto (descontar inventario)")
-        print("4. Generar comprobante manual para cliente (PDF)")
+        print("4. Generar comprobante manual para cliente")
         print("5. Cerrar sesión")
         op = input("Opción: ").strip()
 
@@ -175,19 +178,24 @@ def flujo_trabajador(username):
                 continue
             comp = generar_comprobante(cliente, None, None)
             atender_servicios_para_cliente(cliente, comp.agregar_item)
-            ruta_pdf = comp.guardar_pdf()
-            print(f"✅ Comprobante PDF generado en: {ruta_pdf}")
+            fname = comp.guardar_pdf()  # genera PDF directamente
+            from comprobante import ventas_ram
+            if ventas_ram:
+                ventas_ram[-1] = comp.to_dict()
+            print(f"✅ Comprobante PDF generado y guardado en {fname}")
 
         elif op == "3":
             prod = input("Nombre del producto usado: ").strip()
+            entrada = input("Cantidad usada (unidades/ml): ").strip()
             try:
-                cantidad = float(input("Cantidad usada (unidades/ml): ").strip())
+                # Extrae solo los números (acepta decimales)
+                cantidad = float(''.join(c for c in entrada if c.isdigit() or c == '.'))
             except ValueError:
-                print("Cantidad inválida.")
+                print("Cantidad inválida. Ingresa solo números.")
                 continue
-            ok = inventario.registrar_salida(prod, cantidad)
+            ok = inventario.salidas(prod, cantidad)
             if not ok:
-                print("⚠️ No se pudo registrar la salida (producto faltante).")
+                print("⚠️ No se pudo registrar la salida (producto faltante o insuficiente).")
             else:
                 print("✅ Salida registrada en inventario.")
 
@@ -208,8 +216,11 @@ def flujo_trabajador(username):
                     print("Precio inválido.")
                     continue
                 comp.agregar_item(desc, precio)
-            ruta_pdf = comp.guardar_pdf()
-            print(f"✅ Comprobante PDF generado en: {ruta_pdf}")
+            fname = comp.guardar_pdf()  # PDF directo
+            from comprobante import ventas_ram
+            if ventas_ram:
+                ventas_ram[-1] = comp.to_dict()
+            print(f"✅ Comprobante PDF guardado en {fname}")
 
         elif op == "5":
             print("👋 Cerrando sesión trabajador.")
