@@ -1,16 +1,18 @@
 # comprobante.py
 # Generación de comprobantes de pago (PDF o TXT) + registro de ventas en memoria
+# comprobante.py
+# comprobante.py
+from fpdf import FPDF
 import os
 import time
 
-# Lista RAM donde se guardan todas las ventas realizadas
 ventas_ram = []
 
 class Comprobante:
     def __init__(self, cliente):
         self.cliente = cliente
         self.items = []  # (descripcion, precio)
-        self.fecha_emision = time.strftime("%Y-%m-%d %H:%M:%S")
+        self.fecha_emision = time.strftime("%d-%m-%Y %H:%M:%S")  # Formato amigable
 
     def agregar_item(self, descripcion, precio):
         self.items.append((descripcion, float(precio)))
@@ -26,38 +28,39 @@ class Comprobante:
             "total": self.total()
         }
 
-    def guardar_txt(self, carpeta="comprobantes"):
+    # --- PDF ---
+    def guardar_pdf(self, carpeta="comprobantes"):
         # Crear carpeta si no existe
         if not os.path.exists(carpeta):
             os.makedirs(carpeta)
 
-        filename_base = f"comprobante_{self.cliente.nombre.replace(' ', '_')}_{int(time.time())}"
-        file_path = os.path.join(carpeta, filename_base + ".txt")
+        filename_base = f"comprobante_{self.cliente.nombre.replace(' ', '_')}_{int(time.time())}.pdf"
+        file_path = os.path.join(carpeta, filename_base)
 
-        # Crear el comprobante en formato texto
-        with open(file_path, "w", encoding="utf-8") as f:
-            f.write("=" * 50 + "\n")
-            f.write("        💈 COMPROBANTE DE PAGO 💈\n")
-            f.write("=" * 50 + "\n\n")
-            f.write(f"Cliente: {self.cliente.nombre}\n")
-            f.write(f"Fecha: {self.fecha_emision}\n")
-            f.write("-" * 50 + "\n")
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", "B", 16)
+        pdf.cell(0, 10, "💈 COMPROBANTE DE PAGO 💈", ln=True, align="C")
+        pdf.ln(10)
 
-            for desc, precio in self.items:
-                f.write(f"{desc:<40} Q{precio:>7.2f}\n")
+        pdf.set_font("Arial", "", 12)
+        pdf.cell(0, 10, f"Cliente: {self.cliente.nombre}", ln=True)
+        pdf.cell(0, 10, f"Fecha emisión: {self.fecha_emision}", ln=True)
+        pdf.ln(5)
+        pdf.cell(0, 0, "-"*60, ln=True)
+        pdf.ln(5)
 
-            f.write("-" * 50 + "\n")
-            f.write(f"TOTAL:{'':<36} Q{self.total():>7.2f}\n")
-            f.write("=" * 50 + "\n")
+        for desc, precio in self.items:
+            pdf.cell(140, 10, desc, border=0)
+            pdf.cell(0, 10, f"Q{precio:.2f}", ln=True, align="R")
+
+        pdf.ln(5)
+        pdf.cell(140, 10, "TOTAL", border=0)
+        pdf.cell(0, 10, f"Q{self.total():.2f}", ln=True, align="R")
+
+        pdf.output(file_path)
 
         # Guardar en memoria RAM
         ventas_ram.append(self.to_dict())
 
         return file_path
-
-
-def generar_comprobante(cliente, servicios=None, inventario=None):
-    """
-    Crea un comprobante vacío (los servicios se agregan después).
-    """
-    return Comprobante(cliente)
