@@ -1,18 +1,20 @@
-# main.py
 import sys
+import datetime
 from Clientes import ListaClientes
-from servicios import atender_servicios_para_cliente, pila_historial
+from servicios import atender_servicios_para_cliente
 from inventario import Inventario_lista
 from citas import ListaCitas
 from comprobante import generar_comprobante
 from usario import Lista_de_usuarios
 import reportes
 
-# Instancias globales (RAM)
+# ---------------------------------------------------
+# INSTANCIAS GLOBALES
+# ---------------------------------------------------
 lista_clientes = ListaClientes()
 inventario = Inventario_lista()
 lista_citas = ListaCitas()
-usuarios = Lista_de_usuarios()  # contiene admin/1234 por defecto
+usuarios = Lista_de_usuarios()  # admin/1234 por defecto
 
 # ---------------------------------------------------
 # LOGIN
@@ -27,6 +29,119 @@ def login_prompt():
     else:
         print("Credenciales inválidas.")
     return rol
+
+# ---------------------------------------------------
+# FLUJO CLIENTE
+# ---------------------------------------------------
+def flujo_cliente():
+    while True:
+        print("\n=== MENÚ CLIENTE ===")
+        print("1. Agendar cita")
+        print("2. Ver mis citas")
+        print("3. Cancelar una cita")
+        print("4. Volver al menú principal")
+        op = input("Opción: ").strip()
+
+        if op == "1":
+            nombre = input("Nombre completo: ").strip()
+            tel = input("Teléfono: ").strip()
+
+            cliente = lista_clientes.busqueda_secuencial(nombre)
+            if not cliente:
+                print("No estabas registrado, te agregamos al sistema.")
+                edad = int(input("Edad: ").strip())
+                genero = input("Género (H/M): ").strip().upper()
+                cliente = lista_clientes.agregar_cliente(nombre, tel, edad, genero)
+
+            fecha = input("Fecha cita (DD-MM-YYYY): ").strip()
+            try:
+                datetime.datetime.strptime(fecha, "%d-%m-%Y")
+            except ValueError:
+                print("⚠️ Formato de fecha inválido. Usa DD-MM-YYYY.")
+                continue
+
+            hora = input("Hora cita (HH:MM AM/PM): ").strip().lower()
+            if not hora.endswith(("am", "pm")):
+                print("⚠️ Por favor incluye AM o PM (ej. 11:00 am).")
+                continue
+
+            # ✅ Comprobar duplicado
+            citas_mismo_dia = lista_citas.buscar_por_fecha(fecha)
+            for c in citas_mismo_dia:
+                if c.hora.lower() == hora.lower():
+                    print("⚠️ Ya existe una cita a esa hora. Elige otra.")
+                    break
+            else:
+                servicios = []
+                while True:
+                    print("\n--- Menú de servicios ---")
+                    print("1. Corte - Q20")
+                    print("2. Tinte")
+                    print("3. Peinado - Q15")
+                    print("4. Bases - Q10")
+                    print("0. Terminar selección")
+                    opcion = input("Elige un servicio: ").strip()
+
+                    if opcion == "0":
+                        if not servicios:
+                            print("⚠️ No seleccionaste ningún servicio. Cita cancelada.")
+                        break
+                    elif opcion == "1":
+                        servicios.append(("Corte", 20))
+                    elif opcion == "2":
+                        largo = input("¿Pelo corto o largo? (C/L): ").strip().upper()
+                        while True:
+                            print("\nTipos de tinte:")
+                            print("1. Tinte completo")
+                            print("2. Mechas")
+                            print("3. Raíces")
+                            tipo = input("Elige tipo de tinte: ").strip()
+                            if tipo == "1":
+                                precio = 50 if largo == "C" else 80
+                                servicios.append((f"Tinte completo ({'corto' if largo=='C' else 'largo'})", precio))
+                                break
+                            elif tipo == "2":
+                                precio = 30 if largo == "C" else 50
+                                servicios.append((f"Mechas ({'corto' if largo=='C' else 'largo'})", precio))
+                                break
+                            elif tipo == "3":
+                                precio = 25 if largo == "C" else 40
+                                servicios.append((f"Raíces ({'corto' if largo=='C' else 'largo'})", precio))
+                                break
+                            else:
+                                print("Opción inválida.")
+                    elif opcion == "3":
+                        servicios.append(("Peinado", 15))
+                    elif opcion == "4":
+                        servicios.append(("Bases", 10))
+                    else:
+                        print("Opción inválida.")
+
+                if servicios:
+                    lista_citas.agregar_cita(cliente.nombre, [s[0] for s in servicios], fecha, hora)
+                    print(f"\n✅ Cita agendada para {cliente.nombre} el {fecha} a las {hora}")
+                    print("Servicios seleccionados:")
+                    total = sum(s[1] for s in servicios)
+                    for s in servicios:
+                        print(f"- {s[0]} Q{s[1]}")
+                    print(f"Total a pagar: Q{total}")
+                else:
+                    print("⚠️ No se registró ninguna cita porque no se seleccionaron servicios.")
+
+        elif op == "2":
+            nombre = input("Ingresa tu nombre para ver tus citas: ").strip()
+            lista_citas.mostrar_citas_cliente(nombre)
+
+        elif op == "3":
+            nombre = input("Tu nombre: ").strip()
+            lista_citas.mostrar_citas_cliente(nombre)
+            id_cita = input("ID de la cita que deseas cancelar: ").strip()
+            lista_citas.eliminar_cita(id_cita)
+
+        elif op == "4":
+            break
+        else:
+            print("Opción inválida.")
 
 # ---------------------------------------------------
 # FLUJO TRABAJADOR
@@ -47,9 +162,9 @@ def flujo_trabajador(username):
             edad = int(input("Edad: ").strip())
             genero = input("Género (H/M): ").strip().upper()
             cliente = lista_clientes.agregar_cliente(nombre, tel, edad, genero)
-            fecha = input("Fecha cita (YYYY-MM-DD): ").strip()
-            hora = input("Hora (HH:MM): ").strip()
-            lista_citas.agregar_cita(cliente.nombre, fecha, hora)
+            fecha = input("Fecha cita (DD-MM-YYYY): ").strip()
+            hora = input("Hora (HH:MM AM/PM): ").strip().lower()
+            lista_citas.agregar_cita(cliente.nombre, [], fecha, hora)
             print(f"✅ Cita registrada para {cliente.nombre} - {fecha} {hora}")
 
         elif op == "2":
@@ -58,22 +173,21 @@ def flujo_trabajador(username):
             if not cliente:
                 print("Cliente no encontrado. Regístralo primero.")
                 continue
-
             comp = generar_comprobante(cliente, None, None)
             atender_servicios_para_cliente(cliente, comp.agregar_item)
-
-            # Generar comprobante en TXT (sin PDF)
             fname = comp.guardar_txt()
-
             from comprobante import ventas_ram
             if ventas_ram:
                 ventas_ram[-1] = comp.to_dict()
-
             print(f"✅ Comprobante generado y guardado en {fname}")
 
         elif op == "3":
             prod = input("Nombre del producto usado: ").strip()
-            cantidad = float(input("Cantidad usada (unidades/ml): ").strip())
+            try:
+                cantidad = float(input("Cantidad usada (unidades/ml): ").strip())
+            except ValueError:
+                print("Cantidad inválida.")
+                continue
             ok = inventario.registrar_salida(prod, cantidad)
             if not ok:
                 print("⚠️ No se pudo registrar la salida (producto faltante).")
@@ -86,26 +200,26 @@ def flujo_trabajador(username):
             if not cliente:
                 print("Cliente no encontrado.")
                 continue
-
             comp = generar_comprobante(cliente, None, None)
             while True:
                 desc = input("Descripción del servicio (enter para terminar): ").strip()
                 if desc == "":
                     break
-                precio = float(input("Precio Q: ").strip())
+                try:
+                    precio = float(input("Precio Q: ").strip())
+                except ValueError:
+                    print("Precio inválido.")
+                    continue
                 comp.agregar_item(desc, precio)
-
             fname = comp.guardar_txt()
             from comprobante import ventas_ram
             if ventas_ram:
                 ventas_ram[-1] = comp.to_dict()
-
             print(f"✅ Comprobante guardado en {fname}")
 
         elif op == "5":
             print("👋 Cerrando sesión trabajador.")
             break
-
         else:
             print("Opción inválida.")
 
@@ -116,49 +230,43 @@ def flujo_jefe(username):
     while True:
         print("\n=== MENÚ JEFE ===")
         print("1. Ver inventario")
-        print("2. Reabastecer inventario (entrada)")
+        print("2. Reabastecer inventario")
         print("3. Ver reporte mensual (TXT)")
         print("4. Ver historial de inventario")
-        print("5. Registrar nuevo usuario del sistema")
+        print("5. Registrar nuevo usuario")
         print("6. Cerrar sesión")
         op = input("Opción: ").strip()
 
         if op == "1":
             inventario.mostrar_inventario()
-
         elif op == "2":
-            prod = input("Nombre del producto: ").strip()
-            cantidad = float(input("Cantidad a ingresar: ").strip())
-            ok = inventario.registrar_entrada(prod, cantidad)
+            prod = input("Producto: ").strip()
+            cant = float(input("Cantidad: ").strip())
+            ok = inventario.registrar_entrada(prod, cant)
             if not ok:
-                precio = float(input("Producto no existe. Indica precio unitario Q: ").strip())
-                inventario.agregar_producto(prod, cantidad, precio)
-            print("✅ Inventario actualizado correctamente.")
-
+                precio = float(input("Producto nuevo. Precio unitario Q: ").strip())
+                inventario.agregar_producto(prod, cant, precio)
+            print("✅ Inventario actualizado.")
         elif op == "3":
             yyyy_mm = input("Mes a reportar (YYYY-MM): ").strip()
             fname, text = reportes.generar_reporte_mensual_txt(
                 yyyy_mm, inventario_obj=inventario, carpeta="reportes"
             )
-            print(f"📄 Reporte mensual guardado en: {fname}")
-
+            print(f"📄 Reporte guardado en {fname}")
         elif op == "4":
             inventario.mostrar_movimientos()
-
         elif op == "5":
-            user = input("Nuevo usuario (username): ").strip()
+            user = input("Nuevo usuario: ").strip()
             pwd = input("Contraseña: ").strip()
             rol = input("Rol (jefe/trabajador): ").strip().lower()
             ok = usuarios.agregar_usuario(user, pwd, rol)
             if ok:
-                print("✅ Usuario agregado con éxito.")
+                print("✅ Usuario agregado.")
             else:
-                print("⚠️ No se pudo agregar (usuario ya existe).")
-
+                print("⚠️ Usuario ya existe.")
         elif op == "6":
             print("👋 Cerrando sesión jefe.")
             break
-
         else:
             print("Opción inválida.")
 
@@ -166,39 +274,36 @@ def flujo_jefe(username):
 # MENÚ PRINCIPAL
 # ---------------------------------------------------
 def main_menu():
-    print("=== SISTEMA PELUQUERÍA (CON ROLES) ===")
+    print("=== SISTEMA PELUQUERÍA ===")
     while True:
         print("""
-1. Iniciar como TRABAJADOR (login)
-2. Iniciar como JEFE (login)
+1. Iniciar como CLIENTE
+2. Iniciar como TRABAJADOR (login)
+3. Iniciar como JEFE (login)
 0. Salir
 """)
         op = input("Elección: ").strip()
-
         if op == "0":
-            print("👋 Saliendo del programa.")
+            print("👋 Saliendo del sistema.")
             sys.exit(0)
-
-        elif op in ("1", "2"):
-            rol_esperado = "trabajador" if op == "1" else "jefe"
-            print(f"Ingrese credenciales para rol {rol_esperado.upper()}:")
+        elif op == "1":
+            flujo_cliente()
+        elif op == "2":
             username = input("Usuario: ").strip()
             password = input("Contraseña: ").strip()
             rol = usuarios.autenticar(username, password)
-
-            if not rol:
-                print("Credenciales inválidas.")
-                continue
-
-            if rol != rol_esperado:
-                print(f"⚠️ El usuario no tiene permisos de {rol_esperado}. (rol actual: {rol})")
-                continue
-
             if rol == "trabajador":
                 flujo_trabajador(username)
-            elif rol == "jefe":
+            else:
+                print("⚠️ Usuario sin permisos de trabajador.")
+        elif op == "3":
+            username = input("Usuario: ").strip()
+            password = input("Contraseña: ").strip()
+            rol = usuarios.autenticar(username, password)
+            if rol == "jefe":
                 flujo_jefe(username)
-
+            else:
+                print("⚠️ Usuario sin permisos de jefe.")
         else:
             print("Opción inválida.")
 
@@ -207,3 +312,4 @@ def main_menu():
 # ---------------------------------------------------
 if __name__ == "__main__":
     main_menu()
+
