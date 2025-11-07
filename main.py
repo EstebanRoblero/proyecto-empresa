@@ -1,6 +1,6 @@
 import sys
 import datetime
-from interfaz grafica import iniciar_interfaz
+from interfaz_grafica import iniciar_interfaz
 from Clientes import ListaClientes
 from servicios import atender_servicios_para_cliente
 from inventario import Inventario_lista

@@ -14,6 +14,7 @@ usuarios = ListaDeUsuarios()
 clientes = ListaClientes()
 citas = ListaCitas()
 inventario = Inventario_lista()
+reportes_obj = reportes.Reportes()
 
 # ------------------ UTIL ------------------
 def validar_fecha_ddmmYYYY(texto):
@@ -29,6 +30,32 @@ def normalizar_hora(texto):
 def obtener_citas_de_cliente(nombre):
     todas = citas.to_list_of_dicts()
     return [c for c in todas if c.get("cliente_nombre", "").lower() == nombre.lower()]
+
+# ================== FUNCIONES PLACEHOLDER ==================
+def mostrar_movimientos_window():
+    # Función para mostrar movimientos del inventario en consola
+    inventario.mostrar_inventario()  # puedes reemplazarlo con lógica real de historial
+    print("Aquí se mostraría el historial de movimientos (consola).")
+
+def registrar_cliente_cita_window():
+    # Placeholder para ventana de registro de cliente y cita
+    messagebox.showinfo("Función", "Registrar cliente y cita aún no implementado.")
+
+def registrar_servicios_y_comprobante():
+    messagebox.showinfo("Función", "Registrar servicios y generar comprobante aún no implementado.")
+
+def registrar_uso_producto_window():
+    messagebox.showinfo("Función", "Registrar uso de producto aún no implementado.")
+
+def agregar_producto_window():
+    messagebox.showinfo("Función", "Agregar producto al inventario aún no implementado.")
+
+def generar_comprobante_manual():
+    messagebox.showinfo("Función", "Generar comprobante manual aún no implementado.")
+
+def generar_reporte_mensual():
+    reportes_obj.mostrar_reporte_del_mes()
+    messagebox.showinfo("Reporte mensual", "Reporte mensual generado en consola.")
 
 # ================== LOGIN ==================
 def login():
@@ -103,7 +130,7 @@ def iniciar_cliente():
     en_tel = tk.Entry(win); en_tel.pack()
     tk.Label(win, text="Edad:").pack(pady=4)
     en_edad = tk.Entry(win); en_edad.pack()
-    tk.Label(win, text="Género (H/M):").pack(pady=4)
+    tk.Label(win, text="Género (H/M/N):").pack(pady=4)
     en_gen = tk.Entry(win); en_gen.pack()
 
     def continuar():
@@ -156,161 +183,17 @@ def menu_cliente(nombre):
 
 # ================== CLIENTE FUNCIONES ==================
 def cliente_agendar_cita_window(nombre):
-    win = tk.Toplevel()
-    win.title("Agendar Cita")
-    win.geometry("520x520")
-    win.config(bg="#fffaf8")
-
-    tk.Label(win, text="Agendar cita", font=("Arial", 14, "bold"), bg="#fffaf8").pack(pady=8)
-    tk.Label(win, text="Fecha (DD-MM-YYYY):").pack(); en_fecha = tk.Entry(win); en_fecha.pack()
-    tk.Label(win, text="Hora (HH:MM AM/PM):").pack(); en_hora = tk.Entry(win); en_hora.pack()
-
-    lista_servicios = [
-        ("Corte", 20),
-        ("Tinte", None),
-        ("Peinado", 15),
-        ("Bases", 10)
-    ]
-    tk.Label(win, text="Selecciona servicios:").pack(pady=6)
-    vars_checks = []
-    for n, p in lista_servicios:
-        var = tk.IntVar()
-        chk = tk.Checkbutton(win, text=f"{n} {'Q'+str(p) if p else ''}", variable=var, bg="#fffaf8")
-        chk.pack(anchor="w")
-        vars_checks.append(var)
-
-    frame_tinte = tk.Frame(win, bg="#fffaf8")
-    tk.Label(frame_tinte, text="Tipo de cabello (C/L):").pack(anchor="w")
-    var_largo = tk.StringVar(value="C")
-    tk.Radiobutton(frame_tinte, text="Corto", variable=var_largo, value="C", bg="#fffaf8").pack(anchor="w")
-    tk.Radiobutton(frame_tinte, text="Largo", variable=var_largo, value="L", bg="#fffaf8").pack(anchor="w")
-
-    tk.Label(frame_tinte, text="Tipo de tinte:").pack(anchor="w")
-    var_tipo_tinte = tk.IntVar(value=1)
-    tk.Radiobutton(frame_tinte, text="Tinte completo", variable=var_tipo_tinte, value=1, bg="#fffaf8").pack(anchor="w")
-    tk.Radiobutton(frame_tinte, text="Mechas", variable=var_tipo_tinte, value=2, bg="#fffaf8").pack(anchor="w")
-    tk.Radiobutton(frame_tinte, text="Raíces", variable=var_tipo_tinte, value=3, bg="#fffaf8").pack(anchor="w")
-
-    vars_checks[1].trace_add("write", lambda *a: frame_tinte.pack(pady=6, anchor="w") if vars_checks[1].get() else frame_tinte.forget())
-
-    def agendar():
-        fecha = en_fecha.get().strip()
-        if not validar_fecha_ddmmYYYY(fecha):
-            messagebox.showerror("Error", "Fecha inválida. Usa DD-MM-YYYY.")
-            return
-        hora = normalizar_hora(en_hora.get().strip())
-        if not hora.endswith(("am", "pm")):
-            messagebox.showerror("Error", "Incluye AM/PM en la hora.")
-            return
-
-        citas_mismo_dia = citas.buscar_por_fecha(fecha)
-        for c in citas_mismo_dia:
-            if c.hora.lower() == hora.lower():
-                messagebox.showwarning("Duplicado", "Ya existe una cita en esa hora.")
-                return
-
-        servicios_sel = []
-        if vars_checks[0].get():
-            servicios_sel.append(("Corte", 20))
-        if vars_checks[1].get():
-            largo = var_largo.get()
-            tipo = var_tipo_tinte.get()
-            if tipo == 1:
-                precio = 50 if largo == "C" else 80
-                servicios_sel.append((f"Tinte completo ({'corto' if largo=='C' else 'largo'})", precio))
-            elif tipo == 2:
-                precio = 30 if largo == "C" else 50
-                servicios_sel.append((f"Mechas ({'corto' if largo=='C' else 'largo'})", precio))
-            else:
-                precio = 25 if largo == "C" else 40
-                servicios_sel.append((f"Raíces ({'corto' if largo=='C' else 'largo'})", precio))
-        if vars_checks[2].get():
-            servicios_sel.append(("Peinado", 15))
-        if vars_checks[3].get():
-            servicios_sel.append(("Bases", 10))
-
-        if not servicios_sel:
-            messagebox.showwarning("Sin servicios", "Selecciona al menos uno.")
-            return
-
-        lista_nombres = [s[0] for s in servicios_sel]
-        citas.agregar_cita(nombre, lista_nombres, fecha, hora)
-        total = sum(p for _, p in servicios_sel)
-        messagebox.showinfo("Éxito", f"Cita agendada para {nombre} el {fecha} a las {hora}\nTotal estimado: Q{total:.2f}")
-        win.destroy()
-
-    tk.Button(win, text="Agendar", bg="#c491d8", fg="white", command=agendar).pack(pady=10)
+    # Por simplicidad, solo mensaje
+    messagebox.showinfo("Agendar cita", f"Función de agendar cita para {nombre} aún no implementada.")
 
 def cliente_ver_citas_window(nombre):
-    win = tk.Toplevel()
-    win.title("Ver mis citas")
-    win.geometry("520x360")
-    win.config(bg="#fff")
-
-    lb = tk.Listbox(win, width=80, height=10)
-    lb.pack(pady=10)
-
-    lst = obtener_citas_de_cliente(nombre)
-    if not lst:
-        lb.insert(tk.END, "No se encontraron citas.")
-    else:
-        for c in lst:
-            servicios = ", ".join(c.get("servicios", [])) if c.get("servicios") else "Sin servicios"
-            lb.insert(tk.END, f"ID: {c.get('id')} | {c.get('fecha')} {c.get('hora')} | {servicios}")
+    messagebox.showinfo("Ver citas", f"Función de ver citas de {nombre} aún no implementada.")
 
 def cliente_cancelar_cita_window(nombre):
-    win = tk.Toplevel()
-    win.title("Cancelar cita")
-    win.geometry("520x360")
-    win.config(bg="#fff")
-
-    lb = tk.Listbox(win, width=80, height=10)
-    lb.pack(pady=8)
-
-    lst = obtener_citas_de_cliente(nombre)
-    if not lst:
-        lb.insert(tk.END, "No se encontraron citas.")
-    else:
-        for c in lst:
-            servicios = ", ".join(c.get("servicios", [])) if c.get("servicios") else "Sin servicios"
-            lb.insert(tk.END, f"ID: {c.get('id')} | {c.get('fecha')} {c.get('hora')} | {servicios}")
-
-    def cancelar_seleccion():
-        sel = lb.curselection()
-        if not sel:
-            messagebox.showwarning("Aviso", "Selecciona una cita.")
-            return
-        texto = lb.get(sel[0])
-        try:
-            id_part = texto.split("ID:")[1].split("|")[0].strip()
-        except:
-            messagebox.showerror("Error", "No se pudo obtener el ID.")
-            return
-        ok = citas.eliminar_cita(id_part)
-        if ok:
-            messagebox.showinfo("Éxito", "Cita cancelada.")
-            win.destroy()
-        else:
-            messagebox.showerror("Error", "No se pudo cancelar.")
-
-    tk.Button(win, text="Cancelar cita seleccionada", command=cancelar_seleccion, bg="#e08fbf", fg="white").pack(pady=10)
+    messagebox.showinfo("Cancelar cita", f"Función de cancelar cita de {nombre} aún no implementada.")
 
 def cliente_mostrar_servicios():
-    win = tk.Toplevel()
-    win.title("Servicios y precios")
-    win.geometry("400x260")
-    win.config(bg="#fff8f9")
-    servicios = [
-        ("Corte", 20),
-        ("Tinte completo (corto/largo)", "50/80"),
-        ("Mechas (corto/largo)", "30/50"),
-        ("Raíces (corto/largo)", "25/40"),
-        ("Peinado", 15),
-        ("Bases", 10)
-    ]
-    tk.Label(win, text="Servicios y precios", font=("Arial", 14, "bold"), bg="#fff8f9").pack(pady=8)
-    for s in servicios:
-        tk.Label(win, text=f"{s[0]}  -  Q{s[1]}", bg="#fff8f9").pack(anchor="w", padx=18)
+    messagebox.showinfo("Servicios", "Función de mostrar servicios aún no implementada.")
 
 # ================== INTERFAZ PRINCIPAL ==================
 def iniciar_interfaz():
@@ -347,3 +230,5 @@ def iniciar_interfaz():
 
     tk.Label(ventana_login, text="(Clientes no necesitan iniciar sesión: pulse Cliente)", bg="#fbf6ff").pack(pady=6)
     ventana_login.mainloop()
+
+
