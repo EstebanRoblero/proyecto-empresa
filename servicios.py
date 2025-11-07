@@ -86,18 +86,18 @@ def tinte_menu():
     return desc, precio
 
 
-def atender_servicios_para_cliente(cliente, comprobante_agregar_func):
+def atender_servicios_para_cliente(cliente, comprobante_agregar_func, genero):
     seleccionados=[]
     while True:
-        servicios_mostrados_por_genero(cliente.genero)
+        servicios_mostrados_por_genero(genero)
         opcion=input("Nro servicio (0 terminar): ").strip()
         if opcion=="0":
             break
         if not opcion.isdigit(): continue
         opcion=int(opcion)
-        lista_len=len(Servicios_de_hombre) if cliente.genero=="H" else len(Servicios_de_mujer)
+        lista_len=len(Servicios_de_hombre) if genero=="H" else len(Servicios_de_mujer)
         if 1<=opcion<=lista_len:
-            nombres,precio=Seleccion_de_servicio_establecido(cliente.genero,opcion)
+            nombres,precio=Seleccion_de_servicio_establecido(genero,opcion)
             seleccionados.append((nombres,precio))
             pila_historial.append((cliente.nombre,nombres,precio))
             comprobante_agregar_func(nombres,precio)
@@ -116,3 +116,5 @@ def atender_servicios_para_cliente(cliente, comprobante_agregar_func):
             print("Opción inválida")
     return seleccionados
 
+# Exportar los diccionarios para que estén disponibles en la interfaz gráfica
+__all__ = ['atender_servicios_para_cliente', 'Tintes', 'Bases', 'pila_historial']
