@@ -116,5 +116,5 @@ def atender_servicios_para_cliente(cliente, comprobante_agregar_func, genero):
             print("Opción inválida")
     return seleccionados
 
-# Exportar los diccionarios para que estén disponibles en la interfaz gráfica
-__all__ = ['atender_servicios_para_cliente', 'Tintes', 'Bases', 'pila_historial']
+
+__all__ = ['atender_servicios_para_cliente', 'Tintes', 'Bases', 'pila_historial', 'Servicios_de_hombre', 'Servicios_de_mujer']
