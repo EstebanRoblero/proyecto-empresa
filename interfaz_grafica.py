@@ -10,7 +10,6 @@ from reportes import Reportes
 import datetime
 import os
 
-# ==========================
 # Inicialización global
 # ==========================
 lista_clientes = ListaClientes()
@@ -19,7 +18,7 @@ lista_citas = ListaCitas()
 usuarios = ListaDeUsuarios()
 reportes = Reportes()
 
-# ==========================
+
 # FUNCIONES AUXILIARES
 # ==========================
 def cerrar_ventana(ventana):
@@ -35,9 +34,8 @@ def centrar_ventana(ventana, ancho=600, alto=400):
     y = (ventana.winfo_screenheight() // 2) - (alto // 2)
     ventana.geometry(f"{ancho}x{alto}+{x}+{y}")
 
-# ==========================
-# FUNCIONES CLIENTE - CORREGIDAS
-# ==========================
+# FUNCIONES DEL CLIENTE 
+
 def ventana_agendar_cita(master):
     cerrar_ventana(master)
     v = tk.Tk()
@@ -375,9 +373,9 @@ def ventana_agendar_cita(master):
 
     v.mainloop()
 
-# ==========================
-# Ventana Cliente - COMPLETAMENTE CORREGIDA
-# ==========================
+
+# Ventana del Cliente 
+
 def ventana_cliente():
     v = tk.Tk()
     v.title("Infinity Studio - Cliente")
@@ -413,7 +411,7 @@ def ventana_cliente():
                 messagebox.showinfo("Info", f"No tienes citas registradas a nombre de '{nombre}'.")
                 return
 
-            # Crear ventana para mostrar citas
+            # Crea la ventana para mostrar las citas
             win = tk.Toplevel(v)
             win.title(f"Citas de {nombre}")
             centrar_ventana(win, 700, 400)
@@ -456,7 +454,7 @@ def ventana_cliente():
                 
                 id_cita = selected[0]
                 
-                # Confirmar cancelación
+                # Confirma la cancelación
                 confirmar = messagebox.askyesno("Confirmar", "¿Estás seguro de que quieres cancelar esta cita?")
                 if not confirmar:
                     return
@@ -465,7 +463,7 @@ def ventana_cliente():
                     tree.delete(id_cita)
                     messagebox.showinfo("Éxito", "Cita cancelada correctamente.")
                     
-                    # Si no quedan más citas, cerrar ventana
+                    # Si no quedan más citas cerrar la ventana
                     if not tree.get_children():
                         messagebox.showinfo("Info", "No te quedan más citas.")
                         win.destroy()
@@ -492,9 +490,8 @@ def ventana_cliente():
 
     v.mainloop()
 
-# ==========================
-# PANEL TRABAJADOR - CON REABASTECIMIENTO
-# ==========================
+# PANEL DEL TRABAJADOR 
+
 def ventana_trabajador():
     v = tk.Tk()
     v.title("Infinity Studio - Trabajador")
@@ -546,7 +543,7 @@ def ventana_trabajador():
                 tk.Label(frame_servicios, text=f"• {desc} - Q{precio:.2f}", 
                          bg="#f0f8ff").pack(anchor="w")
         
-        # Frame para servicios
+    
         frame_servicios = tk.Frame(win, bg="#f0f8ff")
         frame_servicios.pack(pady=10, fill="x")
         
@@ -825,8 +822,8 @@ def ventana_trabajador():
         if not citas_hoy:
             tk.Label(win, text="No hay citas para hoy", bg="#f0f8ff").pack(pady=20)
         else:
-            cols = ("Cliente", "Hora", "Servicios")
-            tree = ttk.Treeview(win, columns=cols, show="headings", height=10)
+            cols =("Cliente", "Hora", "Servicios")
+            tree =ttk.Treeview(win, columns=cols, show="headings", height=10)
             for c in cols:
                 tree.heading(c, text=c)
                 tree.column(c, width=200)
@@ -836,7 +833,7 @@ def ventana_trabajador():
                 servicios_str = ", ".join(cita.servicios) if cita.servicios else "No especificados"
                 tree.insert("", "end", values=(cita.cliente_nombre, cita.hora, servicios_str))
 
-    # Botones del trabajador - AHORA CON REABASTECIMIENTO
+    # Botones del trabajador 
     tk.Button(frame, text="Registrar servicio realizado", width=25, height=2, bg="#5f9ea0", fg="white",
               font=("Arial", 11), command=registrar_servicio).pack(pady=5)
     
@@ -857,9 +854,8 @@ def ventana_trabajador():
     
     v.mainloop()
 
-# ==========================
-# PANEL JEFE
-# ==========================
+# PANEL DEL JEFE
+
 def ventana_jefe():
     v = tk.Tk()
     v.title("Infinity Studio - Jefe")
@@ -981,22 +977,22 @@ def ventana_jefe():
             messagebox.showerror("Error", "Formato inválido. Usa MM-YYYY (ejemplo: 11-2024)")
             return
         
-        reporte_info = f"📊 REPORTE MENSUAL - {mes}\n"
-        reporte_info += "=" * 40 + "\n\n"
-        reporte_info += "📈 ESTADÍSTICAS:\n"
-        reporte_info += f"• Total citas realizadas: 45\n"
-        reporte_info += f"• Ingresos totales: Q3,450.00\n"
-        reporte_info += f"• Servicio más popular: Corte de mujer\n"
-        reporte_info += f"• Clientes nuevos: 12\n\n"
+        reporte_info=f"📊 REPORTE MENSUAL - {mes}\n"
+        reporte_info+= "=" * 40 + "\n\n"
+        reporte_info+= "📈 ESTADÍSTICAS:\n"
+        reporte_info+= f"• Total citas realizadas: 45\n"
+        reporte_info+= f"• Ingresos totales: Q3,450.00\n"
+        reporte_info+= f"• Servicio más popular: Corte de mujer\n"
+        reporte_info+= f"• Clientes nuevos: 12\n\n"
         
-        reporte_info += "💰 INGRESOS POR SERVICIO:\n"
-        reporte_info += "• Cortes: Q1,200.00\n"
-        reporte_info += "• Tintes: Q1,500.00\n"
-        reporte_info += "• Tratamientos: Q750.00\n\n"
+        reporte_info+="💰 INGRESOS POR SERVICIO:\n"
+        reporte_info+="• Cortes: Q1,200.00\n"
+        reporte_info+="• Tintes: Q1,500.00\n"
+        reporte_info+="• Tratamientos: Q750.00\n\n"
         
-        reporte_info += "📦 INVENTARIO:\n"
-        reporte_info += "• Productos utilizados: 28 unidades\n"
-        reporte_info += "• Inversión en productos: Q850.00\n"
+        reporte_info+="📦 INVENTARIO:\n"
+        reporte_info+="• Productos utilizados: 28 unidades\n"
+        reporte_info+="• Inversión en productos: Q850.00\n"
         reporte_info += "• Ganancia neta: Q2,600.00"
         
         win = tk.Toplevel(v)
@@ -1025,8 +1021,8 @@ def ventana_jefe():
         if not todas_citas:
             tk.Label(win, text="No hay citas registradas", bg="#f5fff5").pack(pady=20)
         else:
-            cols = ("ID", "Cliente", "Fecha", "Hora", "Servicios")
-            tree = ttk.Treeview(win, columns=cols, show="headings", height=15)
+            cols=("ID", "Cliente", "Fecha", "Hora", "Servicios")
+            tree=ttk.Treeview(win, columns=cols, show="headings", height=15)
             for c in cols:
                 tree.heading(c, text=c)
                 tree.column(c, width=120)
@@ -1054,9 +1050,8 @@ def ventana_jefe():
     
     v.mainloop()
 
-# ==========================
-# LOGIN
-# ==========================
+# EL LOGIN
+
 def ventana_login():
     v = tk.Tk()
     v.title("Inicio de Sesión - Infinity Studio")
@@ -1089,9 +1084,9 @@ def ventana_login():
               command=lambda: abrir_nueva_ventana(v, iniciar_interfaz)).pack()
     v.mainloop()
 
-# ==========================
+
 # INTERFAZ PRINCIPAL
-# ==========================
+
 def iniciar_interfaz():
     root = tk.Tk()
     root.title("Infinity Studio")
@@ -1099,8 +1094,8 @@ def iniciar_interfaz():
     centrar_ventana(root, 800, 600)
 
     try:
-        logo = PhotoImage(file="logoempresa.png")
-        logo = logo.subsample(2, 2)
+        logo=PhotoImage(file="logoempresa.png")
+        logo=logo.subsample(2, 2)
         tk.Label(root, image=logo, bg="white").pack(pady=10)
         root.logo = logo
     except:
@@ -1126,8 +1121,3 @@ def iniciar_interfaz():
     
     root.mainloop()
 
-# ==========================
-# EJECUCIÓN PRINCIPAL
-# ==========================
-if __name__ == "__main__":
-    iniciar_interfaz()
