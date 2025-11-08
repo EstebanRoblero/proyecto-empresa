@@ -1,4 +1,3 @@
-
 import json
 import time
 from typing import Optional
@@ -170,8 +169,17 @@ class ListaCitas:
         return False
 
     # ---------------------------
-    # Convertir toda la lista a lista de dicts (útil para guardar en JSON)
+    # Obtener todas las citas (NUEVO MÉTODO PARA LA INTERFAZ)
     # ---------------------------
+    def obtener_todas_citas(self):
+        """Devuelve todas las citas como una lista (para la interfaz gráfica)"""
+        citas = []
+        actual = self.cabeza
+        while actual:
+            citas.append(actual)
+            actual = actual.siguiente
+        return citas
+
     def to_list_of_dicts(self):
         salida = []
         actual = self.cabeza
@@ -180,9 +188,6 @@ class ListaCitas:
             actual = actual.siguiente
         return salida
 
-    # ---------------------------
-    # Reconstruir lista desde lista de dicts (cargar JSON)
-    # ---------------------------
     def from_list_of_dicts(self, lista_dicts):
         self.cabeza = None
         for d in lista_dicts:
@@ -196,9 +201,6 @@ class ListaCitas:
                     actual = actual.siguiente
                 actual.siguiente = nodo
 
-    # ---------------------------
-    # Guardar en JSON
-    # ---------------------------
     def guardar_json(self, ruta="citas.json"):
         datos = self.to_list_of_dicts()
         try:
@@ -210,9 +212,6 @@ class ListaCitas:
             print("Error guardando JSON:", e)
             return False
 
-    # ---------------------------
-    # Cargar desde JSON
-    # ---------------------------
     def cargar_json(self, ruta="citas.json"):
         try:
             with open(ruta, "r", encoding="utf-8") as f:
@@ -241,17 +240,3 @@ class ListaCitas:
             actual = actual.siguiente
         if not found:
             print("No se encontraron citas para ese cliente.")
-
-# ---------------------------
-# Ejemplo rápido (solo corre si ejecutas este archivo directamente)
-# ---------------------------
-if __name__ == "__main__":
-    lc = ListaCitas()
-    lc.agregar_cita("Juan Perez", ["Corte hombre"], "2025-11-10", "14:00", "Luis")
-    lc.agregar_cita("Ana Lopez", ["Tinte completo - corto"], "2025-11-11", "09:30", None)
-    lc.mostrar_citas()
-    # guardar y cargar demo
-    lc.guardar_json("demo_citas.json")
-    nueva = ListaCitas()
-    nueva.cargar_json("demo_citas.json")
-    nueva.mostrar_citas()
