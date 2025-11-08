@@ -16,7 +16,7 @@ import os
 lista_clientes = ListaClientes()
 inventario = Inventario_lista()
 lista_citas = ListaCitas()
-usuarios = ListaDeUsuarios()  # contiene admin/1234
+usuarios = ListaDeUsuarios()
 reportes = Reportes()
 
 # ==========================
@@ -36,7 +36,7 @@ def centrar_ventana(ventana, ancho=600, alto=400):
     ventana.geometry(f"{ancho}x{alto}+{x}+{y}")
 
 # ==========================
-# FUNCIONES CLIENTE
+# FUNCIONES CLIENTE - CORREGIDAS
 # ==========================
 def ventana_agendar_cita(master):
     cerrar_ventana(master)
@@ -70,10 +70,12 @@ def ventana_agendar_cita(master):
 
     tk.Label(frame, text="Fecha (DD-MM-YYYY):", bg="#fef6f9").grid(row=4, column=0, sticky="e", padx=5, pady=5)
     entry_fecha = tk.Entry(frame, width=25)
+    entry_fecha.insert(0, datetime.datetime.now().strftime("%d-%m-%Y"))
     entry_fecha.grid(row=4, column=1, padx=5, pady=5)
 
     tk.Label(frame, text="Hora (HH:MM am/pm):", bg="#fef6f9").grid(row=5, column=0, sticky="e", padx=5, pady=5)
     entry_hora = tk.Entry(frame, width=25)
+    entry_hora.insert(0, "10:00 am")
     entry_hora.grid(row=5, column=1, padx=5, pady=5)
 
     # Frame para mostrar los servicios
@@ -350,7 +352,7 @@ def ventana_agendar_cita(master):
             return
 
         # Agregar cita
-        lista_citas.agregar_cita(cliente.nombre, [s[0] for s in seleccionados], fecha, hora)
+        lista_citas.agregar_cita(cliente.nombre, [s[0] for s in seleccionados], fecha, hora, None)
         total = sum(s[1] for s in seleccionados)
         detalle = "\n".join([f"• {s[0]} - Q{s[1]:.2f}" for s in seleccionados])
         
@@ -374,7 +376,7 @@ def ventana_agendar_cita(master):
     v.mainloop()
 
 # ==========================
-# Ventana Cliente - CORREGIDA
+# Ventana Cliente - COMPLETAMENTE CORREGIDA
 # ==========================
 def ventana_cliente():
     v = tk.Tk()
@@ -396,47 +398,91 @@ def ventana_cliente():
         if not nombre:
             return
 
-        # Obtener todas las citas y filtrar por nombre
-        todas_citas = lista_citas.obtener_todas_citas()
-        citas_cliente = [c for c in todas_citas if hasattr(c, 'cliente') and c.cliente.lower() == nombre.lower()]
-        
-        if not citas_cliente:
-            messagebox.showinfo("Info", "No tienes citas registradas.")
-            return
-
-        win = tk.Toplevel(v)
-        win.title(f"Citas de {nombre}")
-        centrar_ventana(win, 700, 400)
-        win.configure(bg="#fef6f9")
-
-        tk.Label(win, text=f"Citas de {nombre}", font=("Georgia", 18, "bold"),
-                 bg="#fef6f9", fg="#a83279").pack(pady=10)
-
-        cols = ("ID", "Fecha", "Hora", "Servicios")
-        tree = ttk.Treeview(win, columns=cols, show="headings", height=10)
-        for c in cols:
-            tree.heading(c, text=c)
-            tree.column(c, width=150)
-        tree.pack(pady=10, padx=10, fill="both", expand=True)
-
-        for c in citas_cliente:
-            servicios_str = ", ".join(c.servicios) if hasattr(c, 'servicios') else "No especificados"
-            tree.insert("", "end", iid=c.id, values=(c.id, c.fecha, c.hora, servicios_str))
-
-        def cancelar_seleccion():
-            selected = tree.selection()
-            if not selected:
-                messagebox.showerror("Error", "Selecciona una cita para cancelar.")
+        try:
+            # Obtener todas las citas
+            todas_citas = lista_citas.obtener_todas_citas()
+            
+            if not todas_citas:
+                messagebox.showinfo("Info", "No hay citas registradas en el sistema.")
                 return
-            id_cita = selected[0]
-            lista_citas.eliminar_cita(id_cita)
-            tree.delete(id_cita)
-            messagebox.showinfo("Éxito", "Cita cancelada correctamente.")
 
-        tk.Button(win, text="Cancelar Cita Seleccionada", bg="#c06dbd", fg="white",
-                  command=cancelar_seleccion).pack(pady=5)
-        tk.Button(win, text="Cerrar", bg="#ffc0cb", fg="black",
-                  command=win.destroy).pack(pady=5)
+            # Filtrar citas por nombre del cliente
+            citas_cliente = [c for c in todas_citas if c.cliente_nombre.lower() == nombre.lower()]
+
+            if not citas_cliente:
+                messagebox.showinfo("Info", f"No tienes citas registradas a nombre de '{nombre}'.")
+                return
+
+            # Crear ventana para mostrar citas
+            win = tk.Toplevel(v)
+            win.title(f"Citas de {nombre}")
+            centrar_ventana(win, 700, 400)
+            win.configure(bg="#fef6f9")
+
+            tk.Label(win, text=f"Citas de {nombre}", font=("Georgia", 18, "bold"),
+                     bg="#fef6f9", fg="#a83279").pack(pady=10)
+
+            # Frame con scrollbar
+            frame_tree = tk.Frame(win, bg="#fef6f9")
+            frame_tree.pack(pady=10, padx=10, fill="both", expand=True)
+
+            # Treeview con scrollbar
+            tree_scroll = tk.Scrollbar(frame_tree)
+            tree_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+
+            cols = ("ID", "Fecha", "Hora", "Servicios")
+            tree = ttk.Treeview(frame_tree, columns=cols, show="headings", height=10, yscrollcommand=tree_scroll.set)
+            
+            for c in cols:
+                tree.heading(c, text=c)
+                if c == "Servicios":
+                    tree.column(c, width=250)
+                else:
+                    tree.column(c, width=120)
+            
+            tree.pack(side=tk.LEFT, fill="both", expand=True)
+            tree_scroll.config(command=tree.yview)
+
+            # Llenar treeview
+            for c in citas_cliente:
+                servicios_str = ", ".join(c.servicios) if c.servicios else "No especificados"
+                tree.insert("", "end", iid=c.id, values=(c.id, c.fecha, c.hora, servicios_str))
+
+            def cancelar_seleccion():
+                selected = tree.selection()
+                if not selected:
+                    messagebox.showerror("Error", "Selecciona una cita para cancelar.")
+                    return
+                
+                id_cita = selected[0]
+                
+                # Confirmar cancelación
+                confirmar = messagebox.askyesno("Confirmar", "¿Estás seguro de que quieres cancelar esta cita?")
+                if not confirmar:
+                    return
+                
+                if lista_citas.eliminar_cita(id_cita):
+                    tree.delete(id_cita)
+                    messagebox.showinfo("Éxito", "Cita cancelada correctamente.")
+                    
+                    # Si no quedan más citas, cerrar ventana
+                    if not tree.get_children():
+                        messagebox.showinfo("Info", "No te quedan más citas.")
+                        win.destroy()
+                else:
+                    messagebox.showerror("Error", "No se pudo cancelar la cita")
+
+            # Frame para botones
+            frame_botones = tk.Frame(win, bg="#fef6f9")
+            frame_botones.pack(pady=10)
+
+            tk.Button(frame_botones, text="Cancelar Cita Seleccionada", bg="#c06dbd", fg="white",
+                      font=("Arial", 10, "bold"), command=cancelar_seleccion).pack(side=tk.LEFT, padx=5)
+            tk.Button(frame_botones, text="Cerrar", bg="#ffc0cb", fg="black",
+                      font=("Arial", 10), command=win.destroy).pack(side=tk.LEFT, padx=5)
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al cargar las citas: {str(e)}")
 
     tk.Button(frame, text="Ver / Cancelar citas", width=25, height=2, bg="#b24c9e", fg="white",
               font=("Arial", 11), command=mostrar_citas).pack(pady=5)
@@ -447,12 +493,12 @@ def ventana_cliente():
     v.mainloop()
 
 # ==========================
-# PANEL TRABAJADOR - COMPLETAMENTE FUNCIONAL
+# PANEL TRABAJADOR - CON REABASTECIMIENTO
 # ==========================
 def ventana_trabajador():
     v = tk.Tk()
     v.title("Infinity Studio - Trabajador")
-    centrar_ventana(v, 800, 600)
+    centrar_ventana(v, 800, 650)
     v.configure(bg="#f0f8ff")
 
     tk.Label(v, text="Panel Trabajador", font=("Georgia", 22, "bold"),
@@ -534,43 +580,199 @@ def ventana_trabajador():
         win = tk.Toplevel(v)
         win.title("Registrar Uso de Producto")
         win.configure(bg="#f0f8ff")
-        centrar_ventana(win, 400, 300)
+        centrar_ventana(win, 400, 350)
         
-        tk.Label(win, text="Producto usado:", bg="#f0f8ff").pack(pady=5)
-        entry_producto = tk.Entry(win, width=30)
-        entry_producto.pack(pady=5)
+        # Obtener lista de productos disponibles del inventario
+        productos_disponibles = []
+        actual = inventario.cabeza
+        while actual:
+            if actual.cantidad > 0:
+                productos_disponibles.append(actual.nombre)
+            actual = actual.siguiente
         
-        tk.Label(win, text="Cantidad usada:", bg="#f0f8ff").pack(pady=5)
-        entry_cantidad = tk.Entry(win, width=30)
+        if not productos_disponibles:
+            messagebox.showinfo("Info", "No hay productos disponibles en el inventario")
+            win.destroy()
+            return
+        
+        tk.Label(win, text="Selecciona el producto:", bg="#f0f8ff", font=("Arial", 10, "bold")).pack(pady=10)
+        
+        combo_producto = ttk.Combobox(win, values=productos_disponibles, state="readonly", width=30, font=("Arial", 10))
+        combo_producto.pack(pady=5)
+        
+        frame_info = tk.Frame(win, bg="#f0f8ff")
+        frame_info.pack(pady=10, fill="x")
+        
+        lbl_info = tk.Label(frame_info, text="Selecciona un producto para ver detalles", 
+                           bg="#f0f8ff", fg="#666666", font=("Arial", 9))
+        lbl_info.pack()
+        
+        def actualizar_info_producto(event=None):
+            producto_seleccionado = combo_producto.get()
+            if producto_seleccionado:
+                nodo = inventario.busqueda_secuencial(producto_seleccionado)
+                if nodo:
+                    info_text = f"Stock actual: {nodo.cantidad} {nodo.tipo} | Precio: Q{nodo.precio}"
+                    lbl_info.config(text=info_text, fg="#00688b")
+                else:
+                    lbl_info.config(text="Producto no encontrado", fg="red")
+        
+        combo_producto.bind('<<ComboboxSelected>>', actualizar_info_producto)
+        
+        tk.Label(win, text="Cantidad a usar:", bg="#f0f8ff", font=("Arial", 10, "bold")).pack(pady=10)
+        entry_cantidad = tk.Entry(win, width=30, font=("Arial", 10))
         entry_cantidad.pack(pady=5)
         
         def procesar_uso():
-            producto = entry_producto.get().strip()
+            producto = combo_producto.get().strip()
             cantidad_str = entry_cantidad.get().strip()
             
-            if not producto or not cantidad_str:
-                messagebox.showerror("Error", "Completa todos los campos")
+            if not producto:
+                messagebox.showerror("Error", "Selecciona un producto")
+                return
+            
+            if not cantidad_str:
+                messagebox.showerror("Error", "Ingresa la cantidad a usar")
                 return
             
             try:
                 cantidad = float(cantidad_str)
                 if cantidad <= 0:
-                    raise ValueError
-            except:
-                messagebox.showerror("Error", "Cantidad inválida")
+                    raise ValueError("La cantidad debe ser mayor a 0")
+            except ValueError as e:
+                messagebox.showerror("Error", f"Cantidad inválida: {str(e)}")
                 return
             
-            if inventario.registrar_salida(producto, cantidad):
-                messagebox.showinfo("Éxito", f"Se registró el uso de {cantidad} unidades de {producto}")
-                win.destroy()
+            nodo_producto = inventario.busqueda_secuencial(producto)
+            if not nodo_producto:
+                messagebox.showerror("Error", f"El producto '{producto}' no existe en el inventario")
+                return
+            
+            if cantidad > nodo_producto.cantidad:
+                messagebox.showerror("Error", 
+                                   f"Stock insuficiente\n\n"
+                                   f"Producto: {producto}\n"
+                                   f"Stock disponible: {nodo_producto.cantidad} {nodo_producto.tipo}\n"
+                                   f"Cantidad solicitada: {cantidad} {nodo_producto.tipo}")
+                return
+            
+            confirmacion = messagebox.askyesno(
+                "Confirmar uso de producto",
+                f"¿Registrar uso de {cantidad} {nodo_producto.tipo} de {producto}?\n\n"
+                f"Stock antes: {nodo_producto.cantidad} {nodo_producto.tipo}\n"
+                f"Stock después: {nodo_producto.cantidad - cantidad} {nodo_producto.tipo}"
+            )
+            
+            if confirmacion:
+                if inventario.registrar_salida(producto, cantidad):
+                    nodo_actualizado = inventario.busqueda_secuencial(producto)
+                    stock_restante = nodo_actualizado.cantidad if nodo_actualizado else 0
+                    
+                    messagebox.showinfo(
+                        "Éxito",
+                        f"✅ Uso registrado correctamente\n\n"
+                        f"📦 Producto: {producto}\n"
+                        f"📤 Cantidad usada: {cantidad} {nodo_producto.tipo}\n"
+                        f"📊 Stock restante: {stock_restante} {nodo_producto.tipo}\n"
+                        f"💰 Precio unitario: Q{nodo_producto.precio}"
+                    )
+                    win.destroy()
+                else:
+                    messagebox.showerror("Error", "No se pudo registrar el uso del producto")
+        
+        frame_botones = tk.Frame(win, bg="#f0f8ff")
+        frame_botones.pack(pady=20)
+        
+        tk.Button(frame_botones, text="Registrar Uso", bg="#4682b4", fg="white",
+                  font=("Arial", 10, "bold"), width=15, command=procesar_uso).pack(side=tk.LEFT, padx=10)
+        
+        tk.Button(frame_botones, text="Cancelar", bg="#b0e0e6", fg="black",
+                  font=("Arial", 10), width=15, command=win.destroy).pack(side=tk.LEFT, padx=10)
+
+    def reabastecer_inventario():
+        win = tk.Toplevel(v)
+        win.title("Reabastecer Inventario")
+        win.configure(bg="#f0f8ff")
+        centrar_ventana(win, 400, 350)
+        
+        tk.Label(win, text="Producto a reabastecer:", bg="#f0f8ff", font=("Arial", 10, "bold")).pack(pady=10)
+        
+        # Obtener lista de todos los productos del inventario
+        todos_productos = []
+        actual = inventario.cabeza
+        while actual:
+            todos_productos.append(actual.nombre)
+            actual = actual.siguiente
+        
+        if todos_productos:
+            tk.Label(win, text="Productos existentes:", bg="#f0f8ff", font=("Arial", 9, "bold")).pack(pady=5)
+            productos_texto = ", ".join(todos_productos)
+            tk.Label(win, text=productos_texto, bg="#f0f8ff", font=("Arial", 8), wraplength=350).pack(pady=5)
+        
+        entry_producto = tk.Entry(win, width=30, font=("Arial", 10))
+        entry_producto.pack(pady=5)
+        
+        tk.Label(win, text="Cantidad a agregar:", bg="#f0f8ff", font=("Arial", 10, "bold")).pack(pady=10)
+        entry_cantidad = tk.Entry(win, width=30, font=("Arial", 10))
+        entry_cantidad.pack(pady=5)
+        
+        tk.Label(win, text="Precio unitario (Q):", bg="#f0f8ff", font=("Arial", 10, "bold")).pack(pady=10)
+        entry_precio = tk.Entry(win, width=30, font=("Arial", 10))
+        entry_precio.pack(pady=5)
+        
+        def procesar_reabastecimiento():
+            producto = entry_producto.get().strip()
+            cantidad_str = entry_cantidad.get().strip()
+            precio_str = entry_precio.get().strip()
+            
+            if not producto or not cantidad_str or not precio_str:
+                messagebox.showerror("Error", "Completa todos los campos")
+                return
+            
+            try:
+                cantidad = float(cantidad_str)
+                precio = float(precio_str)
+                if cantidad <= 0 or precio <= 0:
+                    raise ValueError
+            except:
+                messagebox.showerror("Error", "Cantidad y precio deben ser números válidos mayores a 0")
+                return
+            
+            # Verificar si el producto existe
+            producto_existente = inventario.busqueda_secuencial(producto)
+            
+            if producto_existente:
+                # Producto existe, reabastecer
+                if inventario.registrar_entrada(producto, cantidad):
+                    nuevo_stock = producto_existente.cantidad + cantidad
+                    messagebox.showinfo("Éxito", 
+                                      f"✅ Producto reabastecido\n\n"
+                                      f"📦 Producto: {producto}\n"
+                                      f"📥 Cantidad agregada: {cantidad}\n"
+                                      f"📊 Stock actualizado: {nuevo_stock}\n"
+                                      f"💰 Inversión: Q{cantidad * precio:.2f}")
+                    win.destroy()
+                else:
+                    messagebox.showerror("Error", "No se pudo reabastecer el producto")
             else:
-                messagebox.showerror("Error", "No se pudo registrar el uso. Verifica el producto y la cantidad disponible.")
+                # Producto nuevo, agregarlo
+                inventario.agregar_producto(producto, cantidad, precio)
+                messagebox.showinfo("Éxito", 
+                                  f"✅ Producto nuevo agregado\n\n"
+                                  f"📦 Producto: {producto}\n"
+                                  f"📥 Cantidad inicial: {cantidad}\n"
+                                  f"💰 Precio unitario: Q{precio:.2f}\n"
+                                  f"💵 Inversión total: Q{cantidad * precio:.2f}")
+                win.destroy()
         
-        tk.Button(win, text="Registrar Uso", bg="#4682b4", fg="white",
-                  command=procesar_uso).pack(pady=10)
+        frame_botones = tk.Frame(win, bg="#f0f8ff")
+        frame_botones.pack(pady=20)
         
-        tk.Button(win, text="Cancelar", bg="#b0e0e6", fg="black",
-                  command=win.destroy).pack(pady=5)
+        tk.Button(frame_botones, text="Reabastecer", bg="#4682b4", fg="white",
+                  font=("Arial", 10, "bold"), width=15, command=procesar_reabastecimiento).pack(side=tk.LEFT, padx=10)
+        
+        tk.Button(frame_botones, text="Cancelar", bg="#b0e0e6", fg="black",
+                  font=("Arial", 10), width=15, command=win.destroy).pack(side=tk.LEFT, padx=10)
 
     def ver_inventario():
         win = tk.Toplevel(v)
@@ -578,17 +780,31 @@ def ventana_trabajador():
         win.configure(bg="#f0f8ff")
         centrar_ventana(win, 600, 400)
         
-        text = scrolledtext.ScrolledText(win, wrap=tk.WORD, width=70, height=20)
+        text = scrolledtext.ScrolledText(win, wrap=tk.WORD, width=70, height=20, font=("Arial", 10))
         text.pack(padx=10, pady=10, fill="both", expand=True)
         
-        # Obtener inventario como texto
-        inventario_texto = "INVENTARIO ACTUAL:\n\n"
+        inventario_texto = "📦 INVENTARIO ACTUAL - INFINITY STUDIO\n"
+        inventario_texto += "=" * 50 + "\n\n"
         
-        # Simular obtención de inventario
-        inventario_texto += "Producto 1 - Cantidad: 50 - Precio: Q25.00\n"
-        inventario_texto += "Producto 2 - Cantidad: 30 - Precio: Q15.00\n"
-        inventario_texto += "Producto 3 - Cantidad: 20 - Precio: Q40.00\n"
-        inventario_texto += "\n(Esta es una vista simulada del inventario)"
+        actual = inventario.cabeza
+        if not actual:
+            inventario_texto += "El inventario está vacío\n"
+        else:
+            while actual:
+                estado = "✅ Disponible" if actual.cantidad > 0 else "❌ Agotado"
+                inventario_texto += f"• {actual.nombre}\n"
+                inventario_texto += f"  Cantidad: {actual.cantidad} {actual.tipo}\n"
+                inventario_texto += f"  Precio: Q{actual.precio:.2f}\n"
+                inventario_texto += f"  Estado: {estado}\n\n"
+                actual = actual.siguiente
+        
+        actual = inventario.cabeza
+        total_productos = 0
+        while actual:
+            total_productos += 1
+            actual = actual.siguiente
+            
+        inventario_texto += f"\nTotal de productos: {total_productos}"
         
         text.insert(tk.END, inventario_texto)
         text.config(state=tk.DISABLED)
@@ -604,7 +820,6 @@ def ventana_trabajador():
         tk.Label(win, text=f"Citas para hoy ({fecha_hoy})", 
                  font=("Georgia", 16, "bold"), bg="#f0f8ff", fg="#00688b").pack(pady=10)
         
-        # Obtener citas de hoy
         citas_hoy = lista_citas.buscar_por_fecha(fecha_hoy)
         
         if not citas_hoy:
@@ -618,20 +833,23 @@ def ventana_trabajador():
             tree.pack(pady=10, padx=10, fill="both", expand=True)
             
             for cita in citas_hoy:
-                servicios_str = ", ".join(cita.servicios) if hasattr(cita, 'servicios') else "No especificados"
-                tree.insert("", "end", values=(cita.cliente, cita.hora, servicios_str))
+                servicios_str = ", ".join(cita.servicios) if cita.servicios else "No especificados"
+                tree.insert("", "end", values=(cita.cliente_nombre, cita.hora, servicios_str))
 
-    # Botones del trabajador
+    # Botones del trabajador - AHORA CON REABASTECIMIENTO
     tk.Button(frame, text="Registrar servicio realizado", width=25, height=2, bg="#5f9ea0", fg="white",
               font=("Arial", 11), command=registrar_servicio).pack(pady=5)
     
     tk.Button(frame, text="Registrar uso de producto", width=25, height=2, bg="#4682b4", fg="white",
               font=("Arial", 11), command=registrar_uso_producto).pack(pady=5)
     
-    tk.Button(frame, text="Ver inventario", width=25, height=2, bg="#6495ed", fg="white",
+    tk.Button(frame, text="Reabastecer inventario", width=25, height=2, bg="#6495ed", fg="white",
+              font=("Arial", 11), command=reabastecer_inventario).pack(pady=5)
+    
+    tk.Button(frame, text="Ver inventario", width=25, height=2, bg="#4169e1", fg="white",
               font=("Arial", 11), command=ver_inventario).pack(pady=5)
     
-    tk.Button(frame, text="Ver citas de hoy", width=25, height=2, bg="#4169e1", fg="white",
+    tk.Button(frame, text="Ver citas de hoy", width=25, height=2, bg="#1e90ff", fg="white",
               font=("Arial", 11), command=ver_citas_del_dia).pack(pady=5)
     
     tk.Button(frame, text="Volver al inicio", width=25, height=2, bg="#b0e0e6", fg="black",
@@ -640,7 +858,7 @@ def ventana_trabajador():
     v.mainloop()
 
 # ==========================
-# PANEL JEFE - COMPLETAMENTE FUNCIONAL
+# PANEL JEFE
 # ==========================
 def ventana_jefe():
     v = tk.Tk()
@@ -659,29 +877,45 @@ def ventana_jefe():
         win.configure(bg="#f5fff5")
         centrar_ventana(win, 700, 500)
         
-        text = scrolledtext.ScrolledText(win, wrap=tk.WORD, width=80, height=25)
+        text = scrolledtext.ScrolledText(win, wrap=tk.WORD, width=80, height=25, font=("Arial", 10))
         text.pack(padx=10, pady=10, fill="both", expand=True)
         
-        inventario_texto = "INVENTARIO COMPLETO - INFINITY STUDIO\n"
+        inventario_texto = "📊 INVENTARIO COMPLETO - INFINITY STUDIO\n"
         inventario_texto += "=" * 50 + "\n\n"
         
-        # Aquí deberías integrar con tu sistema real de inventario
-        inventario_texto += "💄 PRODUCTOS DE BELLEZA:\n"
-        inventario_texto += "• Shampoo - Stock: 15 - Precio: Q45.00\n"
-        inventario_texto += "• Acondicionador - Stock: 12 - Precio: Q50.00\n"
-        inventario_texto += "• Tinte rubio - Stock: 8 - Precio: Q120.00\n"
-        inventario_texto += "• Tinte negro - Stock: 10 - Precio: Q110.00\n"
-        inventario_texto += "• Gel fijador - Stock: 20 - Precio: Q35.00\n\n"
-        
-        inventario_texto += "✂️ MATERIALES:\n"
-        inventario_texto += "• Tijeras profesionales - Stock: 5 - Precio: Q200.00\n"
-        inventario_texto += "• Peines - Stock: 25 - Precio: Q15.00\n"
-        inventario_texto += "• Capas - Stock: 10 - Precio: Q80.00\n\n"
-        
-        inventario_texto += "📊 RESUMEN:\n"
-        inventario_texto += "• Total productos: 8\n"
-        inventario_texto += "• Valor total inventario: Q2,850.00\n"
-        inventario_texto += "• Productos bajos en stock: Tinte rubio (8 unidades)"
+        actual = inventario.cabeza
+        if not actual:
+            inventario_texto += "El inventario está vacío\n"
+        else:
+            total_productos = 0
+            total_valor = 0
+            productos_bajos = []
+            
+            while actual:
+                total_productos += 1
+                valor_producto = actual.cantidad * actual.precio
+                total_valor += valor_producto
+                
+                inventario_texto += f"🛒 {actual.nombre}\n"
+                inventario_texto += f"   📏 Cantidad: {actual.cantidad} {actual.tipo}\n"
+                inventario_texto += f"   💰 Precio unitario: Q{actual.precio:.2f}\n"
+                inventario_texto += f"   💵 Valor total: Q{valor_producto:.2f}\n"
+                
+                if actual.cantidad <= 10:
+                    productos_bajos.append(actual.nombre)
+                    inventario_texto += f"   ⚠️  BAJO STOCK\n"
+                
+                inventario_texto += "\n"
+                actual = actual.siguiente
+            
+            inventario_texto += "📈 RESUMEN:\n"
+            inventario_texto += f"• Total de productos: {total_productos}\n"
+            inventario_texto += f"• Valor total del inventario: Q{total_valor:.2f}\n"
+            
+            if productos_bajos:
+                inventario_texto += f"• Productos con bajo stock: {', '.join(productos_bajos)}\n"
+            else:
+                inventario_texto += "• ✅ Todo el stock está en niveles adecuados\n"
         
         text.insert(tk.END, inventario_texto)
         text.config(state=tk.DISABLED)
@@ -722,10 +956,13 @@ def ventana_jefe():
                 messagebox.showerror("Error", "Cantidad y precio deben ser números válidos mayores a 0")
                 return
             
-            # Simular reabastecimiento
-            inventario.registrar_entrada(producto, cantidad)
-            messagebox.showinfo("Éxito", f"Se reabastecieron {cantidad} unidades de {producto}\nInversión: Q{cantidad * precio:.2f}")
-            win.destroy()
+            if inventario.registrar_entrada(producto, cantidad):
+                messagebox.showinfo("Éxito", f"Se reabastecieron {cantidad} unidades de {producto}\nInversión: Q{cantidad * precio:.2f}")
+                win.destroy()
+            else:
+                inventario.agregar_producto(producto, cantidad, precio)
+                messagebox.showinfo("Éxito", f"Producto nuevo agregado: {producto}\nCantidad: {cantidad}\nInversión: Q{cantidad * precio:.2f}")
+                win.destroy()
         
         tk.Button(win, text="Reabastecer", bg="#2e8b57", fg="white",
                   command=procesar_reabastecimiento).pack(pady=10)
@@ -739,13 +976,11 @@ def ventana_jefe():
             return
         
         try:
-            # Validar formato de mes
             datetime.datetime.strptime(mes, "%m-%Y")
         except:
             messagebox.showerror("Error", "Formato inválido. Usa MM-YYYY (ejemplo: 11-2024)")
             return
         
-        # Simular generación de reporte
         reporte_info = f"📊 REPORTE MENSUAL - {mes}\n"
         reporte_info += "=" * 40 + "\n\n"
         reporte_info += "📈 ESTADÍSTICAS:\n"
@@ -764,7 +999,6 @@ def ventana_jefe():
         reporte_info += "• Inversión en productos: Q850.00\n"
         reporte_info += "• Ganancia neta: Q2,600.00"
         
-        # Mostrar reporte
         win = tk.Toplevel(v)
         win.title(f"Reporte {mes}")
         win.configure(bg="#f5fff5")
@@ -786,9 +1020,8 @@ def ventana_jefe():
         tk.Label(win, text="Todas las Citas Registradas", 
                  font=("Georgia", 16, "bold"), bg="#f5fff5", fg="#2e8b57").pack(pady=10)
         
-        # Obtener todas las citas
         todas_citas = lista_citas.obtener_todas_citas()
-        
+
         if not todas_citas:
             tk.Label(win, text="No hay citas registradas", bg="#f5fff5").pack(pady=20)
         else:
@@ -800,8 +1033,8 @@ def ventana_jefe():
             tree.pack(pady=10, padx=10, fill="both", expand=True)
             
             for cita in todas_citas:
-                servicios_str = ", ".join(cita.servicios) if hasattr(cita, 'servicios') else "No especificados"
-                tree.insert("", "end", values=(cita.id, cita.cliente, cita.fecha, cita.hora, servicios_str))
+                servicios_str = ", ".join(cita.servicios) if cita.servicios else "No especificados"
+                tree.insert("", "end", values=(cita.id, cita.cliente_nombre, cita.fecha, cita.hora, servicios_str))
 
     # Botones del jefe
     tk.Button(frame, text="Ver inventario completo", width=25, height=2, bg="#3cb371", fg="white",
@@ -871,7 +1104,7 @@ def iniciar_interfaz():
         tk.Label(root, image=logo, bg="white").pack(pady=10)
         root.logo = logo
     except:
-        tk.Label(root, text=" Infinity Studio", bg="white", fg="#a83279", 
+        tk.Label(root, text=" Infinity Studio ", bg="white", fg="#a83279", 
                  font=("Georgia", 16, "bold")).pack(pady=10)
 
     tk.Label(root, text="INFINITY STUDIO M", font=("Georgia", 28, "bold"),
@@ -892,3 +1125,9 @@ def iniciar_interfaz():
               font=("Arial", 12), command=root.destroy).pack(pady=10)
     
     root.mainloop()
+
+# ==========================
+# EJECUCIÓN PRINCIPAL
+# ==========================
+if __name__ == "__main__":
+    iniciar_interfaz()

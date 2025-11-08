@@ -1,0 +1,22 @@
+[
+  {
+    "id": "CITA_1762567065416",
+    "cliente_nombre": "ejemplo",
+    "servicios": [
+      "corte hombre"
+    ],
+    "fecha": "7-11-2025",
+    "hora": "11:00 am",
+    "empleado": null
+  },
+  {
+    "id": "CITA_1762567430932",
+    "cliente_nombre": "kevin",
+    "servicios": [
+      "Barba"
+    ],
+    "fecha": "07-11-2025",
+    "hora": "11:00 am",
+    "empleado": null
+  }
+]
